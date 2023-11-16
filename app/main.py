@@ -9,10 +9,11 @@ from motor.motor_asyncio import AsyncIOMotorClient
 # app imports
 from .db import gather_documents
 from .utils.config import settings as s
-from .db.models import AssetsCatalog
+from .routers import assets
 
 uri = "mongodb://{}:{}/{}".format(s.database_hostname, s.database_port, s.database_name)
 uri = "mongodb://localhost:27017"
+
 DESCRIPTION = """
 This API acts as an intermeediate to the operations db
 
@@ -34,3 +35,5 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+app.include_router(assets.router)

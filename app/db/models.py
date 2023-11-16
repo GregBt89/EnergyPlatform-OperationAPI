@@ -41,3 +41,13 @@ class AssetMeasurements(Document):
 
     def __str__(self) -> str:
         return f"Asset ID: {self.asset_id}, Timestamp: {self.timestamp}"
+    
+class BessSpecificMeasurements(BaseModel):
+    state_of_charge: float = Field(..., description='in percentage')
+    state_of_health: float = Field(..., description='in percentage')
+    cell_avg_temperature: Optional[float] = Field(description='in celcius')
+    dc_voltage: float = Field(..., description='in V')
+    dc_ampers: float = Field(..., description='in A')
+    
+class AssetBessMeasurements(AssetMeasurements):
+    type_specific: BessSpecificMeasurements
