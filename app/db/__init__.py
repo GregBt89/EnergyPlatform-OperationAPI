@@ -5,7 +5,7 @@ from beanie import Document
 
 # All database models must be imported here to be able to
 # initialize them on startup.
-from .models import AssetMeasurements, AssetsCatalog, AssetBessMeasurements
+from .models import AssetMeasurements, AssetsCatalog
 
 DocType = TypeVar("DocType", bound=Document)
 
