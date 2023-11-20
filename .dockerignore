@@ -1,0 +1,5 @@
+.env
+bastion-host.pem
+README.md
+venv
+__pycache__
