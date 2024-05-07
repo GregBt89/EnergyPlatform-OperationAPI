@@ -9,14 +9,13 @@ from motor.motor_asyncio import AsyncIOMotorClient
 # app imports
 from .db import gather_documents
 from .utils.config import settings as s
-from .routers import assets
+from .routers import catalogs, pods, ecomunities
 
 uri = "mongodb://{}:{}/{}".format(s.database_hostname, s.database_port, s.database_name)
 uri = "mongodb://localhost:27017"
 
 DESCRIPTION = """
-This API acts as an intermeediate to the operations db
-
+This API acts as an intermediate to the operations db
 """
 
 @asynccontextmanager
@@ -36,4 +35,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-app.include_router(assets.router)
+app.include_router(catalogs.router)
+app.include_router(pods.router)
+#app.include_router(ecomunities.router)

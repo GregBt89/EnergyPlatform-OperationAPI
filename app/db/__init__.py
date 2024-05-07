@@ -5,10 +5,9 @@ from beanie import Document
 
 # All database models must be imported here to be able to
 # initialize them on startup.
-from .models import AssetMeasurements, AssetsCatalog
+from .models import *
 
 DocType = TypeVar("DocType", bound=Document)
-
 
 def gather_documents() -> Sequence[Type[DocType]]:
     """Returns a list of all MongoDB document models defined in `models` module."""

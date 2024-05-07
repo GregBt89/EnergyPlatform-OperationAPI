@@ -1,11 +1,96 @@
-from beanie import Document, Link
+from beanie import Document, Link, Indexed
 from pydantic import BaseModel, Field
-import pymongo
+from bson import ObjectId
+from beanie.operators import In
 
-from typing import Optional, List
+
+from typing import Optional, List, Annotated
 import datetime
-from .enums import AssetType
+from .enums import PODType, MeterType, ECType, AssetType
 
+
+class MeterCatalog(Document):
+    meter_id: Annotated[int, Indexed(unique=True)]
+    meter_type: MeterType
+
+    @classmethod
+    async def by_meter_id(cls, meter_id: int) -> Optional["MeterCatalog"]:
+        """Get an meter by its SQL id."""
+        return await cls.find_one(cls.meter_id == meter_id)
+    
+    @classmethod
+    async def by_ids(cls, _ids: List[ObjectId]) -> List["MeterCatalog"]:
+        """Get meters by a list of MongoDB ObjectIds."""
+        # Use the $in operator to query for documents with _id in _ids list
+        return await cls.find({"_id": {"$in": _ids}}).to_list()
+
+class PODCatalog(Document):
+    pod_id: Annotated[int, Indexed(unique=True)]
+    pod_type: PODType
+    meter_mongo_id: Link[MeterCatalog]
+
+    @classmethod
+    async def by_pod_id(cls, pod_id: int) -> Optional["PODCatalog"]:
+        """Get an meter by its SQL id."""
+        return await cls.find_one(cls.pod_id == pod_id)
+    
+    @classmethod
+    async def by_many_pod_id(cls, pod_ids: List[int]) -> Optional["PODCatalog"]:
+        """Get an meter by its SQL id."""
+        return await cls.find(In(cls.pod_id, pod_ids)).to_list()
+    
+    @classmethod
+    async def by_ids(cls, _ids: List[ObjectId]) -> Optional[List["PODCatalog"]]:
+        """Get meters by a list of MongoDB ObjectIds."""
+        # Use the $in operator to query for documents with _id in _ids list
+        return await cls.find({"_id": {"$in": _ids}}).to_list()
+    
+class PODMeasurements(Document):
+    pod_id_mongo : Link[PODCatalog]
+    timestamp: datetime.datetime
+    energy_kwh : float
+
+class ECCatalog(Document):
+    ec_id: Annotated[int, Indexed(unique=True)]
+    ec_model_id: int
+    members: List[Link[PODCatalog]]
+
+    @classmethod
+    async def by_ec_id(cls, ec_id: int) -> Optional["MeterCatalog"]:
+        """Get an meter by its SQL id."""
+        return await cls.find_one(cls.ec_id == ec_id)
+
+class ECMembersCatalog(Document):
+    class Parameters(BaseModel):
+        sharing_key_priority:Optional[int]=None
+        sharing_key_percentage:Optional[float] = Field(ge=0, le=100)
+        disable_proportional: Optional[bool]=None
+        unit_sell_euro_kwh:Optional[float]=None
+
+    ec_mongo_id: Link[ECCatalog]
+    pod_mongo_id: Link[PODCatalog]
+    member_type: PODType
+    parameters: Parameters
+    timestamp: datetime.datetime
+
+    @classmethod
+    async def by_ids(cls, _ids: List[ObjectId]) -> Optional[List["ECMembersCatalog"]]:
+        """Get meters by a list of MongoDB ObjectIds."""
+        # Use the $in operator to query for documents with _id in _ids list
+        return await cls.find({"_id": {"$in": _ids}}).to_list()
+
+class AssetsCatalog(Document):
+    asset_id : int = Field(..., description="The unique identifier of the asset from the GlobalRegistry DB")
+    asset_type: AssetType
+    meter_id_mongo : Link[MeterCatalog]
+
+    @classmethod
+    async def by_ids(cls, _ids: List[ObjectId]) -> Optional[List["AssetsCatalog"]]:
+        """Get meters by a list of MongoDB ObjectIds."""
+        # Use the $in operator to query for documents with _id in _ids list
+        return await cls.find({"_id": {"$in": _ids}}).to_list()
+
+'''
 class AssetDetails(BaseModel):
     meter_id: int = Field(...,description="The id of the meter that the assset connects with the grid")
     user_id: int = Field(..., description="The id of the user that the asset is owned by")
@@ -85,5 +170,5 @@ class AssetMeasurements(Document):
     def __str__(self) -> str:
         return f"Asset ID: {self.asset_id}, Timestamp: {self.timestamp}"
     
-
+'''
 
