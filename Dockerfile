@@ -1,4 +1,4 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9-slim-2021-10-02
+FROM python:3.11-slim
 
 WORKDIR /usr/src/app
 
@@ -8,11 +8,6 @@ COPY requirements.txt ./
 
 # Copy the .env file to the image
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the .env file to the image
-ENV UVICORN_HOST=0.0.0.0
-ENV UVICORN_PORT=8000
-ENV UVICORN_WORKERS=2
 
 COPY . .
 

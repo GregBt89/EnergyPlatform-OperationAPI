@@ -12,9 +12,6 @@ from .db import gather_documents
 from .utils.config import settings as s
 from .routers import catalogs, pods, ecomunities
 
-uri = "mongodb://{}:{}/{}".format(s.database_hostname, s.database_port, s.database_name)
-URI = "mongodb://localhost:27017"
-
 DESCRIPTION = """
 This API acts as an intermediate to the operations db
 """
@@ -24,8 +21,9 @@ async def lifespan(app: FastAPI):
     """Initialize application services."""
     try:
         client = get_client()
+        print(client)
         # Initialize Beanie with the database 'operation' and document models
-        await init_beanie(database=client.operation, document_models=gather_documents())
+        await init_beanie(database=getattr(client, s.database_name), document_models=gather_documents())
         print("Startup complete")
         yield
     except Exception as e:

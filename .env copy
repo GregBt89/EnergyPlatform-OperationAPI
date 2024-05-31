@@ -1,7 +1,0 @@
-DATABASE_HOSTNAME=indigener-mongodb-server-cluster.cluster-chqenv2wr2hv.eu-central-1.docdb.amazonaws.com
-DATABASE_PORT=27017
-DATABASE_PASSWORD=U49WPr6hMSGvRVS
-DATABASE_NAME=operation
-DATABASE_USERNAME=indigenerAdmin
-
-

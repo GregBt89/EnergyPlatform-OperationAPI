@@ -1,0 +1,213 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Deploy the operation api, as a fargate service, and integrate with the platform.
+
+Parameters:
+  APINameDNS:
+    Description: 'DNS extension to backend.indigener for new service.'
+    Type: String
+
+  APIDockerImageECR:
+    Description: 'The URI of the api image stored in ECR.'
+    Type: String
+    ConstraintDescription: 'must be a valid ECR image URI.'
+
+  ECSServiceName:
+    Description: 'The name of the servivce to be deployed in the ECS cluster.'
+    Type: String
+    MinLength: '5'
+    MaxLength: '41'
+
+  APIS3EnvFilesARN:
+    Description: 'The S3 path to the environment file.'
+    Type: String
+
+Resources:
+  # Add an entry to service discovery - this is essential for fargate since there are no static ips
+  ServiceADiscoveryEntry:
+    Type: 'AWS::ServiceDiscovery::Service' 
+    Properties:
+      Description: !Sub 
+        - '${DNS} service discovery entry in Cloud Map'
+        - DNS: !Ref APINameDNS
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      Name: !Ref APINameDNS
+      NamespaceId: !ImportValue indigener-namespaces-backendNSid
+
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Condition: {}
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+        - 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly'
+        - 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+      Policies:
+        - PolicyName: AmazonECSTaskExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+            - Effect: Allow
+              Action:
+                # Allow access to objects in s3
+                - 's3:GetObject'
+                # ECS Tasks to download images from ECR
+                - 'ecr:GetAuthorizationToken'
+                - 'ecr:BatchCheckLayerAvailability'
+                - 'ecr:GetDownloadUrlForLayer'
+                - 'ecr:BatchGetImage'
+                # ECS tasks to upload logs to CloudWatch
+                - 'logs:CreateLogStream'
+                - 'logs:PutLogEvents'
+              Resource: '*'
+      Tags:
+      - Key: "Name"
+        Value: "indigener-ecs-task-execution-role"
+      - Key:  "Environment"
+        Value: "development"
+      - Key: "Project"
+        Value: "indigener"
+    
+  # Service task definition
+  TaskDefinition:
+    DependsOn:
+      - ServiceADiscoveryEntry
+    Type: 'AWS::ECS::TaskDefinition'
+    Properties:
+      ContainerDefinitions:
+        - 
+          Name: !Sub 
+          - 'task-${SERVICENAME}'
+          - SERVICENAME: !Ref ECSServiceName
+          Essential: true
+          Image: !Ref APIDockerImageECR
+          PortMappings:
+          - ContainerPort: 8000
+            HostPort: 8000
+            Protocol: tcp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: indigener
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: APIs
+          EnvironmentFiles:
+           - Type: s3
+             Value: !Ref APIS3EnvFilesARN
+      Cpu: "256"
+      Memory: "512"
+      ExecutionRoleArn: 
+        !Ref TaskExecutionRole
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+      
+  # Create the services
+  ServiceA:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - ServiceADiscoveryEntry
+    Properties:
+      ServiceName: !Ref ECSServiceName
+      Cluster: !ImportValue  indigener-ecs-cluster 
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups: 
+            - !Ref ContainerSecurityGroup
+          Subnets:
+            - Fn::ImportValue: indigener-network-private-az-a
+            - Fn::ImportValue: indigener-network-private-az-b
+            - Fn::ImportValue: indigener-network-private-az-c
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - ServiceADiscoveryEntry
+          - Arn
+      TaskDefinition: !Ref TaskDefinition
+      Tags:
+      - Key: "Name"
+        Value: !Ref ECSServiceName
+      - Key:  "Environment"
+        Value: "development"
+      - Key: "Project"
+        Value: "indigener"
+
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup      
+    Properties:
+      VpcId: !ImportValue indigener-network-VPC
+      GroupDescription: 'Allow all incoming HTTP(S) traffic'
+      GroupName: !Sub 
+        - '${SERVICENAME}-sg'
+        - SERVICENAME: ECSServiceName
+      SecurityGroupIngress:
+       - CidrIp: '0.0.0.0/0'
+         IpProtocol: '-1'
+       - CidrIpv6: '::/0'
+         IpProtocol: '-1'
+      Tags:
+      - Key: "Name"
+        Value: !Sub 
+        - '${SERVICENAME}-sg'
+        - SERVICENAME: ECSServiceName
+      - Key:  "Environment"
+        Value: "development"
+      - Key: "Project"
+        Value: "indigener"
+
+  # update the rule of the security group for the Mongo DB Server
+  MongoDBSG:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: 'Add the security group of the new service to allow ingress traffic.'
+      GroupId: sg-09e5da903a499b4fe
+      IpProtocol: tcp
+      SourceSecurityGroupId: !Ref ContainerSecurityGroup
+      FromPort: 0
+      ToPort: 65535
+
+Outputs:
+  
+  Service:
+    Description: "The newly created service"
+    Value: !Ref ServiceA
+    Export:
+      Name: !Sub "${AWS::StackName}-service-definition"
+
+  Task:
+    Description:   "The newly created task definition for the service"
+    Value: !Ref TaskDefinition
+    Export:
+     Name: !Sub "${AWS::StackName}-task-definition"
+
+  SecurityGroup:
+    Description:  The newly created security group (sg) for service
+    Value: !Ref ContainerSecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-service-SG"
+
+  ServiceDNS:
+    Description: "The namespace for the service"
+    Value: !GetAtt ServiceADiscoveryEntry.Name
+    Export:
+      Name: !Sub "${AWS::StackName}-service-DNS"
