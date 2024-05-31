@@ -14,15 +14,77 @@ class MeterCatalog(Document):
     meter_type: MeterType
 
     @classmethod
+    async def all(cls) -> Optional["MeterCatalog"]:
+        """Get an meter by its SQL id."""
+        return await cls.find_all().to_list()
+
+    @classmethod
     async def by_meter_id(cls, meter_id: int) -> Optional["MeterCatalog"]:
         """Get an meter by its SQL id."""
-        return await cls.find_one(cls.meter_id == meter_id)
+        query = {"meter_id": meter_id}
+        return await cls.find_one(query)
     
     @classmethod
     async def by_ids(cls, _ids: List[ObjectId]) -> List["MeterCatalog"]:
         """Get meters by a list of MongoDB ObjectIds."""
         # Use the $in operator to query for documents with _id in _ids list
         return await cls.find({"_id": {"$in": _ids}}).to_list()
+    
+    @classmethod
+    async def fetch_one_with_pods(cls, meter_id:int):
+        pipeline =[
+                    {
+                        '$match': {
+                            'meter_id': meter_id
+                        }
+                    }, {
+                        '$lookup': {
+                            'from': PODCatalog.__name__, 
+                            'localField': '_id', 
+                            'foreignField': 'meter_mongo_id.$id', 
+                            'as': 'pods'
+                        }
+                    }, {
+                        '$project': {
+                            '_id': {
+                                '$toString': '$_id'
+                            }, 
+                            'meter_id': 1, 
+                            'meter_type': 1, 
+                            'pods': {
+                                '$map': {
+                                    'input': '$pods', 
+                                    'as': 'pod', 
+                                    'in': {
+                                        '_id': {
+                                            '$toString': '$$pod._id'
+                                        }, 
+                                        'pod_id': '$$pod.pod_id', 
+                                        'pod_type': '$$pod.pod_type'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+
+        collection = cls.get_motor_collection()
+        result = await collection.aggregate(pipeline).to_list(1)
+        return result  # Return the first result if exists, else None
+
+    
+    @classmethod
+    async def fetch_all_with_pods(cls):
+        pipeline = [
+            {"$lookup": {
+                "from": "podcatalog",
+                "localField": "_id",
+                "foreignField": "meter_mongo_id.$id",
+                "as": "pods"
+            }}
+        ]
+        collection = cls.get_motor_collection()
+        return await collection.aggregate(pipeline).to_list(1)
 
 class PODCatalog(Document):
     pod_id: Annotated[int, Indexed(unique=True)]
@@ -37,13 +99,33 @@ class PODCatalog(Document):
     @classmethod
     async def by_many_pod_id(cls, pod_ids: List[int]) -> Optional["PODCatalog"]:
         """Get an meter by its SQL id."""
-        return await cls.find(In(cls.pod_id, pod_ids)).to_list()
+        pods = await cls.find(In(cls.pod_id, pod_ids)).to_list()
+        # Create a dictionary to map pod_ids to pods for quick lookup
+        pod_map = {pod.pod_id: pod.id for pod in pods}
+        # Reorder the results based on the order of pod_ids provided
+        ordered_pods = [pod_map[pod_id] for pod_id in pod_ids if pod_id in pod_map]
+
+        return pod_map, ordered_pods
     
     @classmethod
-    async def by_ids(cls, _ids: List[ObjectId]) -> Optional[List["PODCatalog"]]:
+    async def by_ids(cls, _ids: List[ObjectId], session=None) -> Optional[List["PODCatalog"]]:
         """Get meters by a list of MongoDB ObjectIds."""
         # Use the $in operator to query for documents with _id in _ids list
-        return await cls.find({"_id": {"$in": _ids}}).to_list()
+        return await cls.find({"_id": {"$in": _ids}}, session=session).to_list()
+    
+    @classmethod
+    async def all(cls):
+        """Get meters by a list of MongoDB ObjectIds."""
+        # Use the $in operator to query for documents with _id in _ids list
+        return await cls.find_all().to_list()
+    
+    @classmethod
+    async def by_meter_id(cls, meter_id: int) -> List["PODCatalog"]:
+        """Get pods by meter_id."""
+        meter = await MeterCatalog.by_meter_id(meter_id)
+        if not meter: return []
+        query = {"meter_mongo_id.$id": meter.id}
+        return await cls.find(query).to_list()
     
 class PODMeasurements(Document):
     pod_id_mongo : Link[PODCatalog]
@@ -53,12 +135,29 @@ class PODMeasurements(Document):
 class ECCatalog(Document):
     ec_id: Annotated[int, Indexed(unique=True)]
     ec_model_id: int
-    members: List[Link[PODCatalog]]
+    members_mongo_id: List[Link[PODCatalog]]
 
     @classmethod
-    async def by_ec_id(cls, ec_id: int) -> Optional["MeterCatalog"]:
+    async def by_ec_id(cls, ec_id: int, db=None) -> Optional["ECCatalog"]:
+        if db:
+            db.createView( "ECCatalog", "PODCatalog", [
+            {
+                "$lookup":
+                    {
+                        "from": "inventory",
+                        "localField": "prodId",
+                        "foreignField": "prodId",
+                        "as": "inventoryDocs"
+                    }
+            }])
         """Get an meter by its SQL id."""
         return await cls.find_one(cls.ec_id == ec_id)
+    
+    @classmethod
+    async def by_ids(cls, _ids: List[ObjectId], session=None) -> List["ECCatalog"]:
+        """Get meters by a list of MongoDB ObjectIds."""
+        # Use the $in operator to query for documents with _id in _ids list
+        return await cls.find({"_id": {"$in": _ids}}, session=session).to_list()
 
 class ECMembersCatalog(Document):
     class Parameters(BaseModel):
@@ -74,15 +173,15 @@ class ECMembersCatalog(Document):
     timestamp: datetime.datetime
 
     @classmethod
-    async def by_ids(cls, _ids: List[ObjectId]) -> Optional[List["ECMembersCatalog"]]:
+    async def by_ids(cls, _ids: List[ObjectId], session=None) -> Optional[List["ECMembersCatalog"]]:
         """Get meters by a list of MongoDB ObjectIds."""
         # Use the $in operator to query for documents with _id in _ids list
-        return await cls.find({"_id": {"$in": _ids}}).to_list()
+        return await cls.find({"_id": {"$in": _ids}}, session=session).to_list()
 
 class AssetsCatalog(Document):
     asset_id : int = Field(..., description="The unique identifier of the asset from the GlobalRegistry DB")
     asset_type: AssetType
-    meter_id_mongo : Link[MeterCatalog]
+    meter_mongo_id: Link[MeterCatalog]
 
     @classmethod
     async def by_ids(cls, _ids: List[ObjectId]) -> Optional[List["AssetsCatalog"]]:
@@ -91,7 +190,8 @@ class AssetsCatalog(Document):
         return await cls.find({"_id": {"$in": _ids}}).to_list()
 
 '''
-class AssetDetails(BaseModel):
+class AssetCatalog(BaseModel):
+    asset_id :int = Field(..., description="The unique identifier of the asset from the GlobalRegistry DB")
     meter_id: int = Field(...,description="The id of the meter that the assset connects with the grid")
     user_id: int = Field(..., description="The id of the user that the asset is owned by")
     asset_type : AssetType 

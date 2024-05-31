@@ -2,29 +2,25 @@ from pydantic import BaseModel, Field
 from ..db.enums import AssetType, MeterType, PODType, ECType
 from typing import Optional, Dict, List
 import datetime
+from bson import ObjectId
 
-class Meter(BaseModel):
+class BaseORM(BaseModel):
+    class Config:
+        orm_mode = True
+
+class Meter(BaseORM):
     meter_id: int
     meter_type: MeterType
 
-    class Config:
-        orm_mode = True
-
-class PODBase(BaseModel):
+class PODBase(BaseORM):
     pod_id: int
     pod_type: PODType
-
-    class Config:
-        orm_mode = True
 
 class MeterAndPODs(Meter):
     pods: List[PODBase]
 
-class MetersAndPODs(BaseModel):
+class MetersAndPODs(BaseORM):
     meters: List[MeterAndPODs]
-
-    class Config:
-        orm_mode = True
 
 '''
 class Meter(BaseModel):
@@ -34,6 +30,13 @@ class Meter(BaseModel):
 
 class POD(PODBase):
     meter_id: int
+    _meter_mongo_id: Optional[ObjectId] = None
+
+    def set_meter_mongo_id(self, value: ObjectId):
+        self._meter_mongo_id = value
+
+    def get_meter_mongo_id(self) -> ObjectId:
+        return self._meter_mongo_id
 
 class PODMeasurements(BaseModel):
     pod_id: int
@@ -51,18 +54,39 @@ class Member(BaseModel):
     member_type: PODType
     parameters: Parameters
     timestamp: datetime.datetime
+    _pod_mongo_id: Optional[ObjectId]=None
+
+    def set_pod_mongo_id(self, value: ObjectId):
+        self._pod_mongo_id = value
+
+    def get_pod_mongo_id(self) -> ObjectId:
+        return self._pod_mongo_id
 
 class Members(BaseModel):
     ec_id: int
     members: List[Member]
+    _ec_mongo_id: Optional[ObjectId]=None 
+    
+    def set_ec_mongo_id(self, value: ObjectId):
+        self._ec_mongo_id = value
+
+    def get_ec_mongo_id(self) -> ObjectId:
+        return self._ec_mongo_id
 
 class EC(Members):
     ec_model_id: int
-
+    
 class AssetCatalog(BaseModel):
     asset_type: AssetType
     asset_id: int
     meter_id: int
+    _meter_mongo_id: Optional[ObjectId] = None
+
+    def set_meter_mongo_id(self, value: ObjectId):
+        self._meter_mongo_id = value
+
+    def get_meter_mongo_id(self) -> ObjectId:
+        return self._meter_mongo_id
 
 '''
 class AssetCatalogDetails(BaseModel):
