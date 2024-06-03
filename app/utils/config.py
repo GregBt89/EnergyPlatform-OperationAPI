@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     database_tls_ca_filename: Optional[str]
     bucket_name: Optional[str] 
     path_to_cert: Optional[str]
-    replica_set: Optional[str]
+    replica_set: Optional[str]=None
     uvicorn_host: Optional[str]='0.0.0.0'
     uvicorn_port: Optional[str]='8000'
     uvicorn_workers: Optional[int]=2

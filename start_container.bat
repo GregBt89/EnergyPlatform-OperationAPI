@@ -1,0 +1,1 @@
+docker run -p 8000:8000 --env-file .env --add-host host.docker.internal:host-gateway op_api_istentore:3.0.0

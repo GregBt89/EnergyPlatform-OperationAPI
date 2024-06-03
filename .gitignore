@@ -3,3 +3,5 @@ __pycache__
 .env
 rds-combined-ca-bundle.pem
 bastion-host.pem
+global-bundle.pem
+tmp

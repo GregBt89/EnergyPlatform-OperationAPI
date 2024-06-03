@@ -77,6 +77,26 @@ Resources:
         Value: "development"
       - Key: "Project"
         Value: "indigener"
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: '2012-10-17'
+      Policies:
+        - PolicyName: S3AccessPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                Resource: '*'
     
   # Service task definition
   TaskDefinition:
@@ -100,7 +120,7 @@ Resources:
             Options:
               awslogs-group: indigener
               awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: APIs
+              awslogs-stream-prefix: APIs/operation/istentore/v3
           EnvironmentFiles:
            - Type: s3
              Value: !Ref APIS3EnvFilesARN
@@ -108,6 +128,8 @@ Resources:
       Memory: "512"
       ExecutionRoleArn: 
         !Ref TaskExecutionRole
+      TaskRoleArn: 
+        !Ref TaskRole
       NetworkMode: awsvpc
       RequiresCompatibilities:
       - FARGATE
@@ -130,7 +152,7 @@ Resources:
       NetworkConfiguration:
         AwsvpcConfiguration:
           SecurityGroups: 
-            - !Ref ContainerSecurityGroup
+            - !ImportValue indigener-operation-api-service-SG
           Subnets:
             - Fn::ImportValue: indigener-network-private-az-a
             - Fn::ImportValue: indigener-network-private-az-b
@@ -150,41 +172,27 @@ Resources:
       - Key:  "Environment"
         Value: "development"
       - Key: "Project"
-        Value: "indigener"
+        Value: "istentore"
 
-  ContainerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup      
-    Properties:
-      VpcId: !ImportValue indigener-network-VPC
-      GroupDescription: 'Allow all incoming HTTP(S) traffic'
-      GroupName: !Sub 
-        - '${SERVICENAME}-sg'
-        - SERVICENAME: ECSServiceName
-      SecurityGroupIngress:
-       - CidrIp: '0.0.0.0/0'
-         IpProtocol: '-1'
-       - CidrIpv6: '::/0'
-         IpProtocol: '-1'
-      Tags:
-      - Key: "Name"
-        Value: !Sub 
-        - '${SERVICENAME}-sg'
-        - SERVICENAME: ECSServiceName
-      - Key:  "Environment"
-        Value: "development"
-      - Key: "Project"
-        Value: "indigener"
-
-  # update the rule of the security group for the Mongo DB Server
-  MongoDBSG:
+  # Add the inbound rule to the imported security group
+  SecurityGroupIngressRule:
     Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      Description: 'Add the security group of the new service to allow ingress traffic.'
-      GroupId: sg-09e5da903a499b4fe
+    Properties: 
+      GroupId: !ImportValue indigener-operation-api-service-SG
       IpProtocol: tcp
-      SourceSecurityGroupId: !Ref ContainerSecurityGroup
-      FromPort: 0
-      ToPort: 65535
+      FromPort: 8000
+      ToPort: 8000
+      SourceSecurityGroupId: !ImportValue dev-indigener-global-registry-api-sg
+
+  # Add the outbound rule to the imported security group
+  SecurityGroupEgressRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !ImportValue indigener-operation-api-service-SG
+      IpProtocol: tcp
+      FromPort: 8000
+      ToPort: 8000
+      DestinationSecurityGroupId: !ImportValue dev-indigener-global-registry-api-sg
 
 Outputs:
   
@@ -199,12 +207,6 @@ Outputs:
     Value: !Ref TaskDefinition
     Export:
      Name: !Sub "${AWS::StackName}-task-definition"
-
-  SecurityGroup:
-    Description:  The newly created security group (sg) for service
-    Value: !Ref ContainerSecurityGroup
-    Export:
-      Name: !Sub "${AWS::StackName}-service-SG"
 
   ServiceDNS:
     Description: "The namespace for the service"

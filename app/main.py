@@ -28,6 +28,7 @@ async def lifespan(app: FastAPI):
         yield
     except Exception as e:
         print(f"Error during application initialization: {str(e)}")
+        print(e)
         raise
     finally:
         print("Shutdown complete")
