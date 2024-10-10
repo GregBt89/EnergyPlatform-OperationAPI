@@ -1,46 +1,64 @@
-# Fast api imports
+# FastAPI imports
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-import colorama; colorama.init()
-# Mongodb imports
-from beanie import init_beanie
-from motor.motor_asyncio import AsyncIOMotorClient
-from .db.config import get_client
+from loguru import logger  # Import Loguru logger
 
-# app imports
+# Application imports
+from .api import all_routers, __version__
+from .core.config import settings as s
 from .db import gather_documents
-from .utils.config import settings as s
-from .routers import catalogs, pods, ecomunities
+from .db.setup import get_client
+from beanie import init_beanie
 
+import colorama
+colorama.init()
+
+# Description for API documentation
 DESCRIPTION = """
 This API acts as an intermediate to the operations db
 """
 
+# Initialize Loguru to write logs to a file
+logger.add("operation_db_api.log", rotation="1 week",
+           retention="1 month", level="DEBUG")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialize application services."""
+    """Initialize application services with logging."""
     try:
+        logger.info("Application startup initiated.")
+
+        # Initialize MongoDB client and Beanie ODM
         client = get_client()
-        print(client)
-        # Initialize Beanie with the database 'operation' and document models
+        logger.debug(f"Using MongoDB client with id: {id(client)}")
+        logger.debug(f"MongoDB client initialized: {client}")
+
+        app.state.mongo_client = client
         await init_beanie(database=getattr(client, s.database_name), document_models=gather_documents())
-        print("Startup complete")
+        logger.info(f"Beanie initialized with database: {s.database_name}")
+
         yield
+
     except Exception as e:
-        print(f"Error during application initialization: {str(e)}")
-        print(e)
+        # Log the error with stack trace
+        logger.error(
+            f"Error during application initialization: {e}", exc_info=True)
         raise
     finally:
-        print("Shutdown complete")
+        # Ensure the client is closed on shutdown
+        logger.info("Shutting down the application.")
         client.close()
+        logger.info("MongoDB client closed. Application shutdown complete.")
 
+
+# Initialize FastAPI app with Loguru integrated lifespan management
 app = FastAPI(
     title="Operation DB API",
     description=DESCRIPTION,
-    version="1.0.0",
+    version=__version__,
     lifespan=lifespan
 )
 
-app.include_router(catalogs.router)
-app.include_router(pods.router)
-#app.include_router(ecomunities.router)
+# Register all API routers
+app.include_router(all_routers)

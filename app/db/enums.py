@@ -14,9 +14,11 @@ class PaymentMethod(Enum):
     TRANSFER = "TRANSFER"
 
 class MeterType(Enum):
-    PRODUCER = "PRODUCER"
-    CONSUMER = "CONSUMER"
-    PROSUMER = "PROSUMER"
+    MAIN = "MAIN"
+    SUB = "SUB-METER"
+    RTU = "RTU"
+    PMU = "PMU"
+    PLC = "PLC"
 
 class PODType(Enum):
     PRODUCTION = "PRODUCTION"
@@ -58,4 +60,5 @@ class AssetType(Enum):
     PVPP = "PVPP"
     WPP = "WPP"
     EVSTATION = "EVSTATION"
+    HYDRO = "HYDRO"
     OTHER = "OTHER"

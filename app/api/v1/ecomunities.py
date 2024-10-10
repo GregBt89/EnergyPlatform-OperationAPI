@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException
 from ..internal.schemas import Meter, POD, EC
-from ..db.models import MeterCatalog, PODCatalog, ECCatalog
+
 from typing import List
 
 router = APIRouter(tags=["Ecommunities"], prefix="/ecomms")

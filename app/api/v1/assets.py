@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException
-from ..schemas.assets import AssetCatalogIn, AssetMeasurementsIn, BessMeasurementsIn, ElyMeasurementsIn
-from ..db.models import AssetsCatalog, AssetMeasurements
+from ...schemas.catalogs import AssetCatalogIn, AssetMeasurementsIn, BessMeasurementsIn, ElyMeasurementsIn
+from ...db.models import AssetsCatalog, AssetMeasurements
 import bson
 
 router = APIRouter(tags=["Assets"], prefix="/assets")
