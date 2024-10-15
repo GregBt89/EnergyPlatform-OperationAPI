@@ -6,6 +6,7 @@ from typing import Type, TypeVar
 from ..db.setup import get_client
 from .common import CommonServices
 from .catalogs import CatalogServices
+from .measurements import MeasurementServices
 
 # Define a TypeVar for the service class
 T = TypeVar("T", bound=CommonServices)
@@ -27,5 +28,8 @@ async def get_common_services(client: AgnosticClient = Depends(get_client)) -> C
 
 
 async def get_catalog_services(client: AgnosticClient = Depends(get_client)) -> CatalogServices:
-    print(client.session)
     return await _get_service(CatalogServices, client)
+
+
+async def get_measurement_services(client: AgnosticClient = Depends(get_client)) -> MeasurementServices:
+    return await _get_service(MeasurementServices, client)

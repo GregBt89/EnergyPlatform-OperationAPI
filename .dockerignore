@@ -1,7 +1,11 @@
 .env
-bastion-host.pem
+*.pem
 README.md
 venv
 __pycache__
 aws_debug
 aws_deploy
+*.md
+*.gitignore
+*bat
+tests

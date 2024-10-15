@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from ...schemas.catalogs import *
 
 from typing import List
@@ -21,7 +21,7 @@ async def get_pods_of_meter(meter_id: int,
 
 @router.post("/pods")
 async def add_new_pods(new_pods: List[POD],
-                      catalog_services: CatalogServices = Depends(gcs)):
+                       catalog_services: CatalogServices = Depends(gcs)):
     return await catalog_services.add_pods_in_catalog(new_pods)
 
 

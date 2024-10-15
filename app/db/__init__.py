@@ -5,7 +5,8 @@ from beanie import Document
 
 # All database models must be imported here to be able to
 # initialize them on startup.
-from .models import *
+from .models.catalogs import *
+from .models.measurements import *
 
 DocType = TypeVar("DocType", bound=Document)
 

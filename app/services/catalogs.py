@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from ..db import models as m
+from ..db.models import catalogs as m
 from bson import ObjectId
 from typing import List
 from .common import CommonServices
