@@ -19,6 +19,8 @@ logger.add("opApi.log", format=log_format, rotation="1 week",
            retention="1 month", level="DEBUG")
 
 # Middleware to add a unique request ID (UUID) to each incoming request
+
+
 async def add_request_id_middleware(request: Request, call_next):
     # Generate a UUID for the request
     request_id = str(uuid.uuid4())
@@ -28,12 +30,16 @@ async def add_request_id_middleware(request: Request, call_next):
 
     # Add the request_id to the Loguru "extra" context
     with logger.contextualize(request_id=request_id):
-        logger.info(f"New request. Client {request.client}, method {request.method}, path {request.url.path}")
+        info = f"New request. Client {request.client}, method {request.method}, path {request.url.path}"
+        if request.url.query:
+            info += f", {request.url.query}"
+        logger.info(info)
         start_time = time.time()
         response = await call_next(request)
         process_time = time.time() - start_time
 
-        logger.info(f"Request completed. status_code {response.status_code}, process_time={process_time:.2f}s")
+        logger.info(
+            f"Request completed. status_code {response.status_code}, process_time={process_time:.2f}s")
         # Include the request ID in the response headers (optional)
         response.headers['X-Request-ID'] = request_id
 
