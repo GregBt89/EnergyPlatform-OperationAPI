@@ -7,6 +7,7 @@ from ..db.setup import get_client
 from .common import CommonServices
 from .catalogs import CatalogServices
 from .measurements import MeasurementServices
+from .pods import PODsServices
 
 # Define a TypeVar for the service class
 T = TypeVar("T", bound=CommonServices)
@@ -33,3 +34,7 @@ async def get_catalog_services(client: AgnosticClient = Depends(get_client)) -> 
 
 async def get_measurement_services(client: AgnosticClient = Depends(get_client)) -> MeasurementServices:
     return await _get_service(MeasurementServices, client)
+
+
+async def get_pod_services(client: AgnosticClient = Depends(get_client)) -> PODsServices:
+    return await _get_service(PODsServices, client)

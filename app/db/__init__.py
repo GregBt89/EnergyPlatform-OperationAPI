@@ -7,6 +7,7 @@ from beanie import Document
 # initialize them on startup.
 from .models.catalogs import *
 from .models.measurements import *
+from .models.pods import *
 
 DocType = TypeVar("DocType", bound=Document)
 

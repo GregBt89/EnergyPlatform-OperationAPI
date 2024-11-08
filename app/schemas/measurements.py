@@ -97,3 +97,34 @@ class MeasurementsOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class PODMeasurementsIn(BaseModel):
+    pod_id: str = Field(
+        ..., description="he unique identifier for the POD")
+    timestamp: datetime = Field(
+        ..., description="Time of the measurement")
+    surplus: float = Field(
+        ..., description="Surplus energy to grid (kWh)")
+    consumption: float = Field(
+        ..., description="Energy consummed from Grid (kWh)")
+
+    class Config:
+        from_attributes = True
+
+    def model_dump(self, **kwargs) -> dict[str, Any]:
+        result = super().model_dump(**kwargs)
+        if not isinstance(result["pod_id"], ObjectId):
+            result["pod_id"] = PydanticObjectId(result["pod_id"])
+        return result
+
+
+class MeasurementsOut(BaseModel):
+    pod_id: str = Field(...,
+                        description="The unique mongodb identifier for the asset")
+    timestamps: List[datetime] = Field(...,
+                                       description="Time of the measurement")
+    surplus: List[float] = Field(
+        ..., description="Surplus energy to grid (kWh)")
+    consumption: List[float] = Field(
+        ..., description="Energy consummed from Grid (kWh)")
