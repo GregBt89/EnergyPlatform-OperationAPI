@@ -5,3 +5,6 @@ tmp
 *.pem
 *.log
 *.bat
+
+data
+aws/debug/data

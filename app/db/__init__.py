@@ -8,13 +8,19 @@ from beanie import Document
 from .models.catalogs import *
 from .models.measurements import *
 from .models.pods import *
+from .models.forecasts import (
+    AssetForecast,
+    PodForecast,
+    MarketForecast
+)
 
 DocType = TypeVar("DocType", bound=Document)
+
+
 
 def gather_documents() -> Sequence[Type[DocType]]:
     """Returns a list of all MongoDB document models defined in `models` module."""
     from inspect import getmembers, isclass
-
     return [
         doc
         for _, doc in getmembers(sys.modules[__name__], isclass)

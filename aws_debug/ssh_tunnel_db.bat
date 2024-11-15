@@ -1,2 +1,0 @@
-@echo on
-ssh -v -i "bastion-host.pem" -L 27018:indigener-mongodb-server-cluster.cluster-chqenv2wr2hv.eu-central-1.docdb.amazonaws.com:27017 ec2-user@ec2-35-156-152-81.eu-central-1.compute.amazonaws.com

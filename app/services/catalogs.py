@@ -76,12 +76,14 @@ class CatalogServices(CommonServices):
         return to_insert
 
     async def add_asset_ids_in_catalogs(self, new_assets: Assets) -> None:
-        print(self.client.session)
         assets = list()
         for new_asset in new_assets:
             assets.append(
                 await self._initilize_asset_catalog(new_asset))
         await self.create_transaction(m.AssetsCatalog.insert_many, assets)
+
+    async def get_all_assets(self) -> List[AssetCatalog]:
+        return await m.AssetsCatalog.all()
 
     async def check_if_meter_exists(self, meter_id):
         return await m.MeterCatalog.by_meter_id(meter_id)

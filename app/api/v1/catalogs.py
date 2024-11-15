@@ -47,3 +47,8 @@ async def add_new_ec_members(members: schemas.Members,
 async def add_new_asset(assets: List[AssetCatalog],
                         catalog_services: CatalogServices = Depends(gcs)):
     return await catalog_services.add_asset_ids_in_catalogs(assets)
+
+
+@router.get("/assets")
+async def get_all_assets(catalog_services: CatalogServices = Depends(gcs)):
+    return await catalog_services.get_all_assets()

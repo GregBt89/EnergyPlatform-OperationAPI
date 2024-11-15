@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from ..db.models import (
-    measurements as m
+    measurements as m,
+    catalogs as c
 )
 from ..db.enums import AssetType
 from beanie import Document
