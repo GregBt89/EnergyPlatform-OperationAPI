@@ -1,9 +1,9 @@
 from fastapi import HTTPException
-from ..db.models import catalogs as m
+from ..db.models import mCatalogs as m
 from bson import ObjectId
 from typing import List
-from .common import CommonServices
-from ..schemas.catalogs import (
+from .seCommon import CommonServices
+from ..schemas.shCatalogs import (
     POD,
     MeterAndPODs,
     Meter,

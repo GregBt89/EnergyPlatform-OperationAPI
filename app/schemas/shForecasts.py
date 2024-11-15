@@ -1,13 +1,11 @@
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
-from typing import Optional, Any, List, Union, Literal
+from typing import Optional, Literal, List
 from beanie import PydanticObjectId
-from bson import ObjectId
 
-from ..db.models.forecasts import (
+from ..db.models.mForecasts import (
     ForecastMetadata, 
     ForecastValue, 
-    InputReferences,
     PydanticObjectId
 )
 

@@ -2,7 +2,7 @@ from beanie import Document, Link
 from pydantic import Field
 from bson import ObjectId
 from loguru import logger
-from .catalogs import PODCatalog
+from .mCatalogs import PODCatalog
 import pymongo
 
 from typing import Optional

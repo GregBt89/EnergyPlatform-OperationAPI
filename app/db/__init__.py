@@ -5,10 +5,10 @@ from beanie import Document
 
 # All database models must be imported here to be able to
 # initialize them on startup.
-from .models.catalogs import *
-from .models.measurements import *
-from .models.pods import *
-from .models.forecasts import (
+from .models.mCatalogs import *
+from .models.mMeasurements import *
+from .models.mPods import *
+from .models.mForecasts import (
     AssetForecast,
     PodForecast,
     MarketForecast

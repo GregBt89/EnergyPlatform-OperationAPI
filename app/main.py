@@ -18,11 +18,6 @@ DESCRIPTION = """
 This API acts as an intermediate to the operations db
 """
 
-# Initialize Loguru to write logs to a file
-logger.add("operation_db_api.log", rotation="1 week",
-           retention="1 month", level="DEBUG")
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize application services with logging."""

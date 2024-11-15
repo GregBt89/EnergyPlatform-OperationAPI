@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends
-from ...schemas.catalogs import *
-
 from typing import List
-from ...services import CatalogServices, get_catalog_services as gcs
+
+from app.schemas.shCatalogs import *
+from app.services import (
+    CatalogServices,
+    get_catalog_services as gcs
+)
 
 router = APIRouter(tags=["Catalogs"], prefix="/catalogs")
 

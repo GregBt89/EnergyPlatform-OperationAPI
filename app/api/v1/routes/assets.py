@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException, Depends
-from ...schemas.measurements import BessMeasurementsIn, AssetMeasurementsIn, MeasurementsOut
-from ...services import MeasurementServices as MS, get_measurement_services as gms
+from app.schemas.shMeasurements import BessMeasurementsIn, AssetMeasurementsIn, MeasurementsOut
+from app.services import MeasurementServices as MS, get_measurement_services as gms
 from typing import List, Optional, Tuple, Union
 from datetime import datetime, date
 from loguru import logger

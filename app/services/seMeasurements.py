@@ -1,17 +1,17 @@
 from fastapi import HTTPException
 from ..db.models import (
-    measurements as m,
-    catalogs as c
+    mCatalogs as c,
+    mMeasurements as m
 )
 from ..db.enums import AssetType
 from beanie import Document
 from bson import ObjectId
 from typing import List, Union, Type, TypeVar, Optional
-from ..schemas.measurements import (
+from ..schemas.shMeasurements import (
     BessMeasurementsIn,
     AssetMeasurementsIn
 )
-from .common import CommonServices
+from .seCommon import CommonServices
 from loguru import logger
 from datetime import datetime
 # Generic type for different measurement schemas

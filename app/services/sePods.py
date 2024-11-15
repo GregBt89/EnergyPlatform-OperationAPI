@@ -1,16 +1,16 @@
 from fastapi import HTTPException
 from ..db.models import (
-    pods as p,
-    catalogs as c
+    mCatalogs as c,
+    mPods as p
 )
 from ..db.enums import PODType
 from beanie import Document
 from bson import ObjectId
 from typing import List, Union, Type, TypeVar, Optional
-from ..schemas.measurements import (
+from ..schemas.shMeasurements import (
     PODMeasurementsIn
 )
-from .common import CommonServices
+from .seCommon import CommonServices
 from loguru import logger
 from datetime import datetime
 # Generic type for different measurement schemas

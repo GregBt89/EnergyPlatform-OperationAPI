@@ -7,7 +7,6 @@ from bson import ObjectId
 
 class BaseORM(BaseModel):
     class Config:
-        orm_mode = True
         from_attributes = True
 
 

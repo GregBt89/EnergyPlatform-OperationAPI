@@ -2,12 +2,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from motor.core import AgnosticClient
 from ..core.config import settings as s
 import boto3
-import logging
-from fastapi import Request
 from loguru import logger  # Import Loguru logger
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 CERT_CACHE_PATH = 'cert.pem'
 DEV = True

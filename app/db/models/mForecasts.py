@@ -1,38 +1,13 @@
 from beanie import Document, Indexed, Link, Insert, before_event
-from pydantic_core import core_schema
 from bson import ObjectId
 from pydantic import BaseModel, Field
-from typing import List, Optional, Literal, Any, Callable, Annotated
+from typing import List, Optional, Literal, Any
 from datetime import datetime, timezone
 from loguru import logger
-from .catalogs import AssetsCatalog, PODCatalog
-
+from .mCatalogs import (
+    AssetsCatalog, PODCatalog)
+from app import PydanticObjectId
 # Define a custom type for ObjectId compatibility
-class _ObjectIdPydanticAnnotation:
-    # Based on https://docs.pydantic.dev/latest/usage/types/custom/#handling-third-party-types.
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: Any,
-        _handler: Callable[[Any], core_schema.CoreSchema],
-    ) -> core_schema.CoreSchema:
-        def validate_from_str(input_value: str) -> ObjectId:
-            return ObjectId(input_value)
-
-        return core_schema.union_schema(
-            [
-                # check if it's an instance first before doing any further work
-                core_schema.is_instance_schema(ObjectId),
-                core_schema.no_info_plain_validator_function(validate_from_str),
-            ],
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-PydanticObjectId = Annotated[
-    str, _ObjectIdPydanticAnnotation
-]
-
 
 
 class InputReferences(BaseModel):
@@ -51,8 +26,8 @@ class ForecastMetadata(BaseModel):
                                   description="Timestamp when the forecat was executed")
     schema_version: int = Field(...,
                                 description="The version of the Forecast Schema")
-    model_id: int = Field(..., description="the id of the forecast model")
-    model_name: Optional[str] = Field(None, description="The model name")
+    f_model_id: int = Field(..., description="the id of the forecast model")
+    f_model_name: Optional[str] = Field(None, description="The model name")
     input_references: List[InputReferences] = Field(
         ..., description="A list of input references to other collection that were used to make the forecasts.")
     parameters: Optional[Any] = Field(
@@ -94,16 +69,19 @@ class BaseForecast(Document):
             "model_name": "Neural Network",
             "model_id": "NN_v3.2",
             "executed_at": datetime.now(timezone.utc),
-            "input_references": [
-                ObjectId("666f6f2d6261722d71757578"),
-                ObjectId("666f6f2d6261722d71757578")
-            ],
+            "input_references": [{"database_name": "historicalDb",
+                                  "collection_name": "historicalAssets",
+                                  "input_refs": [
+                                      ObjectId("666f6f2d6261722d71757578"),
+                                      ObjectId("666f6f2d6261722d71757578")
+                                  ]}],
             "parameters": {
                 "confidence_interval": 95,
                 "smoothing_factor": 0.5
             }
         }
     )
+
 
 class AssetForecast(BaseForecast):
     asset_id: PydanticObjectId = Field(
@@ -126,10 +104,15 @@ class AssetForecast(BaseForecast):
     @before_event(Insert)
     async def validate_asset_id_exists(self):
         # Check if the asset_id exists in the AssetsCatalog collection
+        logger.debug(f"Validating asset_id: {self.asset_id}")
         exists = await AssetsCatalog.find_one({"_id": self.asset_id})
         if not exists:
             raise ValueError(
                 f"Referenced asset_id {self.asset_id} does not exist in AssetsCatalog.")
+
+    @classmethod
+    async def all(cls) -> Optional["AssetsCatalog"]:
+        return await cls.find_all().to_list()
 
 
 class PodForecast(BaseForecast):
@@ -160,7 +143,8 @@ class PodForecast(BaseForecast):
 
 
 class MarketForecast(BaseForecast):
-    market_id : PydanticObjectId = Field(description="Reference to market id from market catalog")
+    market_id: PydanticObjectId = Field(
+        description="Reference to market id from market catalog")
 
     class Settings:
         collection = "pod_forecasts"

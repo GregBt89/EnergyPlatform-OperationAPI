@@ -4,11 +4,11 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from motor.core import AgnosticClient
 from typing import Type, TypeVar
 from ..db.setup import get_client
-from .common import CommonServices
-from .catalogs import CatalogServices
-from .measurements import MeasurementServices
-from .pods import PODsServices
-from .forecasts import ForecastServices
+from .seCommon import CommonServices
+from .seCatalogs import CatalogServices
+from .seMeasurements import MeasurementServices
+from .sePods import PODsServices
+from .seForecasts import ForecastServices
 
 # Define a TypeVar for the service class
 T = TypeVar("T", bound=CommonServices)
