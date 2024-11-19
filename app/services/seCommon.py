@@ -30,9 +30,12 @@ class CommonServices:
         try:
             return document(**data)
         except Exception as e:
-            logger.error(f"Exception occured at {document} initilization: {e}")
+            msg = f"Exception occured at {document} initilization: {str(e)}"
+            logger.error(msg)
             raise HTTPException(
-                status_code=500, detail=f"Exception occured at {document} initilization: {e}")
+                status_code=500,
+                detail=msg
+            )
 
     async def create_transaction(self, method, *args, **kwargs):
         """

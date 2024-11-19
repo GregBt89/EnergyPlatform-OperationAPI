@@ -5,14 +5,15 @@ from beanie import Document
 
 # All database models must be imported here to be able to
 # initialize them on startup.
-from .models.mCatalogs import *
-from .models.mMeasurements import *
-from .models.mPods import *
-from .models.mForecasts import (
+from app.db.models.mCatalogs import *
+from app.db.models.mMeasurements import *
+from app.db.models.mPods import *
+from app.db.models.mForecasts import (
     AssetForecast,
     PodForecast,
     MarketForecast
 )
+from app.db.models.mOptimization import *
 
 DocType = TypeVar("DocType", bound=Document)
 
@@ -26,3 +27,4 @@ def gather_documents() -> Sequence[Type[DocType]]:
         for _, doc in getmembers(sys.modules[__name__], isclass)
         if issubclass(doc, Document) and doc.__name__ != "Document"
     ]
+

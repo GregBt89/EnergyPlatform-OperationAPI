@@ -4,20 +4,10 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Literal, Any
 from datetime import datetime, timezone
 from loguru import logger
-from .mCatalogs import (
+from app.db.models.mCatalogs import (
     AssetsCatalog, PODCatalog)
-from app import PydanticObjectId
-# Define a custom type for ObjectId compatibility
-
-
-class InputReferences(BaseModel):
-    database_name: Optional[str] = Field(
-        None, description="The name of the database that the collection belongs to. If none the current db will be assumed")
-    collection_name: str = Field(
-        ..., description="The name of the collection the inputs belong to")
-    input_refs: List[PydanticObjectId] = Field(
-        default_factory=list,  description="The list of _id for the inputs used from the colleciton to make the forecast")
-
+from app.utils.types import PydanticObjectId
+from app.db.models.mShared import InputReferences
 
 class ForecastMetadata(BaseModel):
     added_at: datetime = Field(...,
@@ -34,8 +24,6 @@ class ForecastMetadata(BaseModel):
         None, description="Possible parameters that are passed in the forecast model")
 
 # Define the schema for each individual forecast value
-
-
 class ForecastValue(BaseModel):
     timestamp: datetime = Field(...,
                                 description="Timestamp of the forecasted value")

@@ -1,14 +1,11 @@
-from fastapi import APIRouter, status, HTTPException, Depends
+from fastapi import APIRouter, status, Depends
 from app.schemas.shMeasurements import BessMeasurementsIn, AssetMeasurementsIn, MeasurementsOut
 from app.services import MeasurementServices as MS, get_measurement_services as gms
-from typing import List, Optional, Tuple, Union
-from datetime import datetime, date
+from typing import List, Optional, Union
+from app.utils.types import DATEOPTIONS
 from loguru import logger
 
 router = APIRouter(tags=["Assets"], prefix="/assets")
-
-DATEOPTIONS = Union[datetime, date, None]
-DATERANGE = Tuple[DATEOPTIONS, DATEOPTIONS]
 
 
 @router.get("/measurements/bess", response_model=MeasurementsOut, response_model_exclude_none=True)

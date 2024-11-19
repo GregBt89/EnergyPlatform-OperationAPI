@@ -4,7 +4,7 @@ from bson import ObjectId
 from beanie.operators import In
 import pymongo
 
-
+from app.utils.types import PydanticObjectId
 from typing import Optional, List, Annotated
 import datetime
 from ..enums import PODType, MeterType, ECType, AssetType
@@ -176,7 +176,7 @@ class AssetsCatalog(Document):
     async def by_ids(cls, _ids: List[ObjectId]) -> Optional[List["AssetsCatalog"]]:
         # Use the $in operator to query for documents with _id in _ids list
         return await cls.find({"_id": {"$in": _ids}}).to_list()
-    
+
     @classmethod
     async def by_asset_id(cls, asset_id: int) -> Optional["AssetsCatalog"]:
         return await cls.find_one({"asset_id": asset_id})
@@ -184,3 +184,9 @@ class AssetsCatalog(Document):
     @classmethod
     async def all(cls) -> Optional["AssetsCatalog"]:
         return await cls.find_all().to_list()
+
+    @classmethod
+    async def exists(clc, _id: PydanticObjectId) -> bool:
+        if await clc.find_one({"_id": ObjectId(_id)}):
+            return True
+        return False

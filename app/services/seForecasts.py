@@ -31,7 +31,6 @@ class ForecastServices(CommonServices):
         # Convert to list
         forecasts = self._to_list(forecasts)
         # Initialize documents
-        # Initialize documents
         docs = [
             self._initialize_document(
                 f.AssetForecast, {**doc.model_dump(), "asset_id": asset_id}
@@ -43,7 +42,7 @@ class ForecastServices(CommonServices):
 
     async def inject_pod_forecasts(self, pod_id: str, forecasts: List[Forecasts]):
         docs = [self._initialize_document(
-            f.PodForecast, doc.model_dump()) for doc in forecasts]
+            f.PodForecast, {**doc.model_dump(), "pod_id": pod_id}) for doc in forecasts]
         # Insert documents in a transaction
         await self.create_transaction(f.PodForecast.insert_many, docs)
 
@@ -53,10 +52,19 @@ class ForecastServices(CommonServices):
         # Insert documents in a transaction
         await self.create_transaction(f.MarketForecast.insert_many, docs)
 
-    async def get_asset_forecasts(self):
+    async def get_asset_forecasts(self, asset_id):
         #!TODO Add conditional search
-        if 
-        return await f.AssetForecast.all()
+        if asset_id:
+            if isinstance(asset_id, int):
+                #Search by sql_id
+                forecasts = await f.PodForecast()
+            elif ObjectId.is_valid():
+                # Search by mongo_id
+                forecasts = await f.PodForecast()
+        else:
+            # Return all forecasts
+            forecasts = await f.AssetForecast.all()  
+        return forecasts
     
     async def get_pod_forecasts(self, pod_id):
         #!TODO Add conditional search

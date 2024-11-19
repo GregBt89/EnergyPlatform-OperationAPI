@@ -1,22 +1,19 @@
-# FastAPI imports
-from .utils.log_setup import logger, add_request_id_middleware
-from .db.setup import get_client
-from .db import gather_documents
-from .core.config import settings as s
-from .api import all_routers, __version__
+from app.api import all_routers, __version__
+from app.core.config import settings as s
+from app.db import gather_documents
+from app.db.setup import get_client
+from app.utils.log_setup import logger, add_request_id_middleware
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from loguru import logger  # Import Loguru logger
 from beanie import init_beanie
 import colorama
 colorama.init()
-
-# Application imports
-
 # Description for API documentation
 DESCRIPTION = """
 This API acts as an intermediate to the operations db
 """
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

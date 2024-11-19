@@ -72,10 +72,10 @@ async def add_request_id_middleware(request: Request, call_next):
             exc_traceback = traceback.format_exc()
 
             logger.error(
-                f"Unhandled exception occurred. status_code=500, process_time={process_time:.2f}s\n"
-                f"Exception Type: {exc_type}\n"
-                f"Exception Message: {exc_message}\n"
-                f"Traceback: {exc_traceback}"
+                f"Unhandled exception occurred. status_code=500, process_time={process_time:.2f}s - "
+                f"Exception Type: {exc_type} - "
+                f"Exception Message: {exc_message}."
+                #f"Traceback: {exc_traceback}"
             )
             return JSONResponse(
                 status_code=500,

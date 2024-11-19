@@ -1,6 +1,5 @@
 
 from fastapi import Depends
-from motor.motor_asyncio import AsyncIOMotorClient
 from motor.core import AgnosticClient
 from typing import Type, TypeVar
 from ..db.setup import get_client
@@ -9,6 +8,7 @@ from .seCatalogs import CatalogServices
 from .seMeasurements import MeasurementServices
 from .sePods import PODsServices
 from .seForecasts import ForecastServices
+from .seOptmization import OptimizationServices
 
 # Define a TypeVar for the service class
 T = TypeVar("T", bound=CommonServices)
@@ -40,5 +40,10 @@ async def get_measurement_services(client: AgnosticClient = Depends(get_client))
 async def get_pod_services(client: AgnosticClient = Depends(get_client)) -> PODsServices:
     return await _get_service(PODsServices, client)
 
+
 async def get_forecast_services(client: AgnosticClient = Depends(get_client)) -> ForecastServices:
     return await _get_service(ForecastServices, client)
+
+
+async def get_optimization_services(client: AgnosticClient = Depends(get_client)) -> OptimizationServices:
+    return await _get_service(OptimizationServices, client)
