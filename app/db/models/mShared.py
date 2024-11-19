@@ -17,3 +17,6 @@ class InputReferences(BaseModel):
         The list of _id for the inputs used from the colleciton to make the forecast/optimization
         """
     )
+
+    class Config:
+        from_attributes = True

@@ -10,7 +10,8 @@ from app.schemas.shOptimization import (
 )
 from loguru import logger
 from app.utils.types import PydanticObjectId
-from typing import List
+from typing import List, Optional
+from bson import ObjectId
 
 
 class OptimizationServices(CommonServices):
@@ -33,8 +34,8 @@ class OptimizationServices(CommonServices):
             run_id: PydanticObjectId,
             results=List[AssetOptimizationResults]
     ) -> None:
-
-        if not await mO.OptimizationRun.exists(run_id):
+        run = await mO.OptimizationRun.exists(run_id)
+        if not run:
             raise ValueError(
                 f"Optimization run with id {run_id} doesnt exitst")
 
@@ -47,7 +48,7 @@ class OptimizationServices(CommonServices):
             docs.append(
                 self._initialize_document(
                     mO.AssetOptimizationSchedule,
-                    {**doc.model_dump(), "optimization_run_id": run_id}
+                    {**doc.model_dump(), "optimization_run_id": run.id}
                 )
             )
 
@@ -57,3 +58,17 @@ class OptimizationServices(CommonServices):
         )
 
         return
+
+    async def get_optimization_run(self, run_id: str, schedules: Optional[bool] = False):
+
+        run_id = self._to_ObjectId(run_id)
+
+        run = await mO.OptimizationRun.exists(run_id, links=False)
+        if not run:
+            raise ValueError(
+                f"Optimization run with id {run_id} doesnt exitst")
+        if schedules:
+            logger.debug("Some mongodb servers (AWS DocDB) do not support correlated subqueries." +
+                         "Using second direct query for optimization results")
+            run.asset_schedules = await mO.AssetOptimizationSchedule.by_optimization_run_id(run_id)
+        return run

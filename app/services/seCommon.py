@@ -5,11 +5,18 @@ from pymongo.errors import PyMongoError, DuplicateKeyError, WriteError, BulkWrit
 from loguru import logger
 from motor.core import AgnosticClient
 from typing import List
+from bson import ObjectId
 
 
 class CommonServices:
     def __init__(self, client: AgnosticClient):
         self.client = client
+
+    @staticmethod
+    def _to_ObjectId(_id):
+        if ObjectId.is_valid(_id):
+            return ObjectId(_id)
+        raise ValueError(f"ID {_id} not a valid ObjectID")
 
     @staticmethod
     def _to_list(x):

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Depends
-from typing import List
+from typing import List, Optional
 from loguru import logger
 from app.services import (
     OptimizationServices as PS,
@@ -8,7 +8,8 @@ from app.services import (
 from app.schemas.shOptimization import (
     OptimizationRun,
     OptimizationRunResponse,
-    AssetOptimizationResults
+    AssetOptimizationResults,
+    AssetOptimizationResultsResponse,
 )
 from app.utils.types import PydanticObjectId
 
@@ -32,3 +33,13 @@ async def store_asset_optimization_results(
 ):
     logger.info(f"Storing asset results for optimization run with ID {run_id}")
     return await services.store_asset_optimization_results(run_id, results)
+
+
+@router.get("/{run_id:str}", response_model=AssetOptimizationResultsResponse, response_model_exclude_none=True)
+async def get_optimization_runs(
+    run_id: str,
+    schedules: Optional[bool] = False,
+    services: PS = Depends(gos)
+):
+    res = await services.get_optimization_run(run_id, schedules)
+    return res

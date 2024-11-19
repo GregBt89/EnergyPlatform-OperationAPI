@@ -1,6 +1,6 @@
 from beanie import Document, BackLink, Link
 from pydantic import BaseModel, Field
-from typing import List, Optional, Literal, Any, Dict
+from typing import List, Optional, Literal, Any, Dict, Union
 from bson import ObjectId
 from datetime import datetime, timezone
 from app.utils.types import PydanticObjectId
@@ -45,6 +45,9 @@ class OptimizationMetadata(BaseModel):
             "smoothing_factor": 0.5
         })
 
+    class Config:
+        from_attributes = True
+
 
 class OptimizationRun(Document):
     valid_from: datetime = Field(
@@ -55,9 +58,9 @@ class OptimizationRun(Document):
         ..., description="Optimization metadata.")
 
     # Backlink to reference all associated schedules
-    # asset_schedules: Optional[List[BackLink["AssetOptimizationSchedule"]]] = Field(
-    #    default_factory=list, description="Backlink to associated asset schedules."
-    # )
+    asset_schedules: Optional[List[Link["AssetOptimizationSchedule"]]] = Field(
+        default_factory=list, description="Backlink to associated asset schedules."
+    )
 
     class Settings:
         collection = "optimization_runs"
@@ -67,9 +70,13 @@ class OptimizationRun(Document):
         ]
 
     @classmethod
-    async def exists(clc, _id: PydanticObjectId) -> bool:
-        if await clc.find_one({"_id": ObjectId(_id)}):
-            return True
+    async def exists(clc, _id: ObjectId, links=False) -> Union["OptimizationRun", False]:
+        run = await clc.find_one(
+            {"_id": ObjectId(_id)},
+            fetch_links=links
+        )
+        if run:
+            return run
         return False
 
 
@@ -82,6 +89,9 @@ class Schedule(BaseModel):
             ..., description="Setpoint value.")
         direction: Optional[Literal["up", "down"]] = Field(
             None, description="For frr, indicating whether to setpoint is for upwards or downwards change.")
+
+        class Config:
+            from_attributes = True
 
     results_type: Literal["setpoints", "fiancial_metric", "behavior_metric", "sharing_keys"] = Field(
         "setpoints", description="The type of the results for example setpoints or the expected behaviour of the asset following the setpoints (e.g. SoC)")
@@ -96,6 +106,9 @@ class Schedule(BaseModel):
         }]
     )
 
+    class Config:
+        from_attributes = True
+
 
 class AssetSchedule(BaseModel):
     service: Literal["arbitrage", "mfrr", "afrr"] = Field(
@@ -104,6 +117,9 @@ class AssetSchedule(BaseModel):
         "day-ahead", description="The scope refers to whether results are about day-ahead or intraday")
     results: List[Schedule] = Field(
         ..., description="A list of setpoints or metrics.")
+
+    class Config:
+        from_attributes = True
 
 
 class AssetOptimizationSchedule(Document):
@@ -120,3 +136,23 @@ class AssetOptimizationSchedule(Document):
             [("asset_id", 1)],
             [("optimization_run_id", 1)],
         ]
+
+    @classmethod
+    async def by_optimization_run_id(cls, run_id: ObjectId) -> List["AssetOptimizationSchedule"]:
+        """
+        Fetch all AssetOptimizationSchedule documents associated with the given optimization run ID.
+
+        Args:
+            run_id (ObjectId): The ID of the optimization run.
+
+        Returns:
+            List[AssetOptimizationSchedule]: A list of matching schedules.
+        """
+        query = {
+            "optimization_run_id": {
+                "$ref": "OptimizationRun",
+                "$id": run_id
+            }
+        }
+
+        return await cls.find(query).to_list()

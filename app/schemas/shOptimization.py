@@ -17,14 +17,30 @@ class OptimizationRun(BaseModel):
     metadata: Optional[OptimizationMetadata] = Field(
         None, description="For now we set metadata to an optional attribute")
 
-
-class OptimizationRunResponse(OptimizationRun):
-    run_id: PydanticObjectId
     class Config:
         from_attributes = True
 
+
+class OptimizationRunResponse(OptimizationRun):
+    run_id: PydanticObjectId = Field(..., alias="optimization_run_id")
+
+    class Config:
+        from_attributes = True
+
+
 class AssetOptimizationResults(BaseModel):
-    asset_id:PydanticObjectId = Field(
+    asset_id: PydanticObjectId = Field(
         ..., description="The id of the asset that the results refer to.", example=str(ObjectId()))
     schedule: List[AssetSchedule] = Field(
         ..., description="Schedule for the asset.")
+
+    class Config:
+        from_attributes = True
+
+
+class AssetOptimizationResultsResponse(OptimizationRun):
+    asset_schedules: Optional[List["AssetOptimizationResults"]] = None
+    id: PydanticObjectId = Field(..., serialization_alias="run_id")
+
+    class Config:
+        from_attributes = True
