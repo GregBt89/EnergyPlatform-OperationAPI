@@ -10,6 +10,7 @@ from app.schemas.shOptimization import (
     OptimizationRunResponse,
     AssetOptimizationResults,
     AssetOptimizationResultsResponse,
+    OptimizationRuResultsResponse
 )
 from app.utils.types import PydanticObjectId
 
@@ -35,11 +36,19 @@ async def store_asset_optimization_results(
     return await services.store_asset_optimization_results(run_id, results)
 
 
-@router.get("/{run_id:str}", response_model=AssetOptimizationResultsResponse, response_model_exclude_none=True)
+@router.get("/{run_id:str}", response_model=OptimizationRuResultsResponse, response_model_exclude_none=True)
 async def get_optimization_runs(
     run_id: str,
     schedules: Optional[bool] = False,
     services: PS = Depends(gos)
 ):
-    res = await services.get_optimization_run(run_id, schedules)
-    return res
+    return await services.get_optimization_run(run_id, schedules)
+
+
+@router.get("/assets/{asset_id:str}", response_model=Optional[List[AssetOptimizationResultsResponse]], response_model_exclude_none=True)
+async def get_asset_optimization_results(
+    asset_id: str,
+    run_id: Optional[PydanticObjectId] = None,
+    services: PS = Depends(gos)
+):
+    return await services.get_asset_optimization_results(asset_id, run_id)

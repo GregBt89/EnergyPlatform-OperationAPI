@@ -22,6 +22,8 @@ logger.add("opApi.log", format=log_format, rotation="1 week",
            retention="1 month", level="DEBUG")
 
 # Middleware to add a unique request ID (UUID) to each incoming request
+
+
 async def add_request_id_middleware(request: Request, call_next):
     # Generate a UUID for the request
     request_id = str(uuid.uuid4())
@@ -75,7 +77,7 @@ async def add_request_id_middleware(request: Request, call_next):
                 f"Unhandled exception occurred. status_code=500, process_time={process_time:.2f}s - "
                 f"Exception Type: {exc_type} - "
                 f"Exception Message: {exc_message}."
-                #f"Traceback: {exc_traceback}"
+                f"Traceback: {exc_traceback}"
             )
             return JSONResponse(
                 status_code=500,

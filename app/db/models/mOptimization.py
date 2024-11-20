@@ -138,6 +138,26 @@ class AssetOptimizationSchedule(Document):
         ]
 
     @classmethod
+    async def exists(clc, asset_id: ObjectId, run_id: Optional[ObjectId] = None, links=False) -> Optional[List["AssetOptimizationSchedule"]]:
+        query = {
+            "asset_id": ObjectId(asset_id)
+        }
+        if run_id:
+            query.update(
+                {
+                    "optimization_run_id": {
+                        '$ref': "OptimizationRun",
+                        '$id': ObjectId(run_id)
+                    }
+                }
+            )
+
+        return await clc.find(
+            query,
+            fetch_links=links
+        ).to_list()
+
+    @ classmethod
     async def by_optimization_run_id(cls, run_id: ObjectId) -> List["AssetOptimizationSchedule"]:
         """
         Fetch all AssetOptimizationSchedule documents associated with the given optimization run ID.

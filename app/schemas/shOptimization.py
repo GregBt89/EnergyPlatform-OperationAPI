@@ -1,8 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
+from beanie import Link
 from typing import Optional, List
 from datetime import datetime
 from bson import ObjectId
-from app.utils.types import PydanticObjectId
+from loguru import logger
+from app.utils.types import PydanticObjectId, LinkType
 from app.db.models.mOptimization import (
     OptimizationMetadata,
     AssetSchedule
@@ -38,7 +40,24 @@ class AssetOptimizationResults(BaseModel):
         from_attributes = True
 
 
-class AssetOptimizationResultsResponse(OptimizationRun):
+class AssetOptimizationResultsResponse(BaseModel):
+    asset_id: PydanticObjectId = Field(
+        ..., description="The id of the asset that the results refer to.", example=str(ObjectId()))
+    schedule: List[AssetSchedule] = Field(
+        ..., description="Schedule for the asset.")
+    optimization_run_id: LinkType = Field(
+        ..., description="the optimization run that the results belong to.")
+
+    class Config:
+        from_attributes = True
+
+    @field_serializer('optimization_run_id')
+    def serialize_optimization_run_id(self, optimization_run_id: LinkType, _info):
+        logger.debug("Serializing -", optimization_run_id)
+        return str(optimization_run_id.ref.id)
+
+
+class OptimizationRuResultsResponse(OptimizationRun):
     asset_schedules: Optional[List["AssetOptimizationResults"]] = None
     id: PydanticObjectId = Field(..., serialization_alias="run_id")
 

@@ -67,8 +67,21 @@ class OptimizationServices(CommonServices):
         if not run:
             raise ValueError(
                 f"Optimization run with id {run_id} doesnt exitst")
+
         if schedules:
             logger.debug("Some mongodb servers (AWS DocDB) do not support correlated subqueries." +
                          "Using second direct query for optimization results")
             run.asset_schedules = await mO.AssetOptimizationSchedule.by_optimization_run_id(run_id)
         return run
+
+    async def get_asset_optimization_results(self, asset_id: PydanticObjectId, run_id: Optional[PydanticObjectId]):
+
+        # run_id = self._to_ObjectId(run_id)
+
+        asset_results = await mO.AssetOptimizationSchedule.exists(asset_id, run_id)
+        if not asset_results:
+            msg = f"No results found for asset - {asset_id}"
+            if run_id:
+                msg += f" and optimization_run - {run_id}"
+            logger.info(msg)
+        return asset_results
