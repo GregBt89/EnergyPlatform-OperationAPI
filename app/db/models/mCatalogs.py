@@ -91,7 +91,8 @@ class MeterCatalog(Document):
 class PODCatalog(Document):
     pod_id: Annotated[int, Indexed(unique=True)]
     pod_type: PODType
-    meter_mongo_id: Link[MeterCatalog]
+    meter_mongo_id: PydanticObjectId = Field(
+        ..., description="the id of the meter from MeterCatalog not the sql.")
 
     @classmethod
     async def by_pod_id(cls, pod_id: int) -> Optional["PODCatalog"]:
@@ -137,7 +138,8 @@ class ECMembersCatalog(Document):
     sharing_key_percentage: Optional[float] = Field(ge=0, le=100)
     disable_proportional: Optional[bool] = None
     unit_sell_euro_kwh: Optional[float] = None
-    pod_mongo_id: Link[PODCatalog]
+    pod_mongo_id: PydanticObjectId = Field(
+        ..., description="The id of the POD from PODCatalog, not the sql.")
     pod_type: PODType
     timestamp: datetime.datetime
     ec_id: int
@@ -162,7 +164,8 @@ class AssetsCatalog(Document):
     asset_id: int = Field(
         ..., description="The unique identifier of the asset from the GlobalRegistry DB")
     asset_type: AssetType
-    meter_mongo_id: Link[MeterCatalog]
+    meter_mongo_id: PydanticObjectId = Field(
+        ..., description="The id of the meter from MeterCatalog, not the sql")
 
     class Settings:
         collection = "assets_catalog"

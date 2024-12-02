@@ -17,7 +17,7 @@ from app.utils.types import PydanticObjectId
 router = APIRouter(prefix='/optimization', tags=["Optimization"])
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, response_model=OptimizationRunResponse)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=OptimizationRunResponse, response_model_exclude_none=True)
 async def store_optimization_run(
         run_details: OptimizationRun,
         services: PS = Depends(gos)
@@ -52,3 +52,4 @@ async def get_asset_optimization_results(
     services: PS = Depends(gos)
 ):
     return await services.get_asset_optimization_results(asset_id, run_id)
+

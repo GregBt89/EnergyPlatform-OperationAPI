@@ -44,7 +44,7 @@ class OptimizationServices(CommonServices):
             if not await mC.AssetsCatalog.exists(doc.asset_id):
                 raise ValueError(
                     f"Asset id {doc.asset_id} results for optimization run with id {run_id} doesnt exitst")
-
+            print(doc.model_dump())
             docs.append(
                 self._initialize_document(
                     mO.AssetOptimizationSchedule,
