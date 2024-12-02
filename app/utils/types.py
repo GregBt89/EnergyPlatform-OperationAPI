@@ -34,7 +34,6 @@ class _LinkTypeAnnotation(Generic[T]):
             """
             Validate a string representation of the ObjectId and return a Link object.
             """
-            logger.info(f"Here, {input_value}")
             if not ObjectId.is_valid(input_value):
                 raise ValueError(f"Invalid ObjectId: {input_value}")
             # Return a Link with the given ObjectId

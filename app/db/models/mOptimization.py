@@ -1,4 +1,4 @@
-from beanie import Document, BackLink, Link
+from beanie import Document
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal, Any, Dict, Union
 from bson import ObjectId
@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from app.utils.types import PydanticObjectId
 from app.db.models.mShared import InputReferences
 from enum import Enum
+from app.schemas import FromAttributes
 
 
 class ExecutionStatus(str, Enum):
@@ -15,7 +16,7 @@ class ExecutionStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-class OptimizationMetadata(BaseModel):
+class OptimizationMetadata(FromAttributes):
     o_model_name: str = Field(
         ..., description="Optimization model name.", example="MILP-DayAhead-VPP")
     o_model_version: str = Field(
@@ -54,12 +55,13 @@ class OptimizationRun(Document):
         ..., description="Start time of the optimization horizon.")
     valid_until: datetime = Field(
         ..., description="End time of the optimization horizon.")
-    metadata: OptimizationMetadata = Field(
-        ..., description="Optimization metadata.")
+    metadata: Optional[OptimizationMetadata] = Field(
+        None, description="Optimization metadata.")
 
     # Backlink to reference all associated schedules
-    asset_schedules: Optional[List[Link["AssetOptimizationSchedule"]]] = Field(
-        default_factory=list, description="Backlink to associated asset schedules."
+    asset_schedules: Optional[List[PydanticObjectId]] = Field(
+        default_factory=list,
+        description="Backlink to associated asset schedules."
     )
 
     class Settings:
@@ -82,28 +84,15 @@ class OptimizationRun(Document):
 
 class Schedule(BaseModel):
 
-    class TimePoints(BaseModel):
-        timestamp: datetime = Field(
-            ..., description="Timestamp of the schedule entry.")
-        value: float = Field(
-            ..., description="Setpoint value.")
-        direction: Optional[Literal["up", "down"]] = Field(
-            None, description="For frr, indicating whether to setpoint is for upwards or downwards change.")
-
-        class Config:
-            from_attributes = True
-
-    results_type: Literal["setpoints", "fiancial_metric", "behavior_metric", "sharing_keys"] = Field(
+    results_type: Literal["setpoints", "reserve", "metrics", "sharing_keys"] = Field(
         "setpoints", description="The type of the results for example setpoints or the expected behaviour of the asset following the setpoints (e.g. SoC)")
     variable: str = Field(
         ..., description="The name of the variable the schedule is representing.", example="activePower")
     unit: str = Field(
         ..., description="The unit tha the variable is expressed to.", example="kW")
-    values: List[TimePoints] = Field(
-        ..., description="The resulted values, with timestamps", example=[{
-            "timestamp": datetime.now(timezone.utc),
-            "value": 50
-        }]
+    values: List = Field(
+        ..., default_factory=list,
+        description="The resulted values", example=[50, 55, 55, 61, 23, 63]
     )
 
     class Config:
@@ -115,7 +104,7 @@ class AssetSchedule(BaseModel):
         "arbitrage", description="The schedule type to distinguish between different services")
     scope: Literal["day-ahead", "intra-day"] = Field(
         "day-ahead", description="The scope refers to whether results are about day-ahead or intraday")
-    results: List[Schedule] = Field(
+    schedule: List[Schedule] = Field(
         ..., description="A list of setpoints or metrics.")
 
     class Config:
@@ -125,9 +114,11 @@ class AssetSchedule(BaseModel):
 class AssetOptimizationSchedule(Document):
     asset_id: PydanticObjectId = Field(
         ..., description="Reference to the controllable asset.")
-    optimization_run_id: Link["OptimizationRun"] = Field(
+    optimization_run_id: PydanticObjectId = Field(
         ..., description="Reference to the optimization run.")
-    schedule: List[AssetSchedule] = Field(
+    timestamp: List[datetime] = Field(
+        ..., description="Timestamps of the results.")
+    results: List[AssetSchedule] = Field(
         ..., description="Schedule for the asset.")
 
     class Settings:

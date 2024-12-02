@@ -3,11 +3,12 @@ from datetime import datetime, timezone
 from typing import Optional, Literal, List
 from beanie import PydanticObjectId
 
-from ..db.models.mForecasts import (
+from app.db.models.mForecasts import (
     ForecastMetadata, 
-    ForecastValue, 
-    PydanticObjectId
+    ForecastValue
 )
+
+from app.utils.types import PydanticObjectId
 
 # Base class for shared forecast structure
 class Forecasts(BaseModel):
