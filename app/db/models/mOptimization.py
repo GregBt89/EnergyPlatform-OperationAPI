@@ -7,6 +7,21 @@ from app.utils.types import PydanticObjectId
 from app.db.models.mShared import InputReferences
 from enum import Enum
 from app.schemas import FromAttributes
+from app.utils.log_setup import logger
+
+
+LOOKUP = {
+    '$lookup': {
+        'from': '',
+        'localField': '',
+        'foreignField': '',
+        'as': ''
+    }
+}
+
+MATCH = {
+    '$match': {}
+}
 
 
 class ExecutionStatus(str, Enum):
@@ -71,15 +86,48 @@ class OptimizationRun(Document):
             [("metadata.status", 1)],
         ]
 
+
+    def _join_asset_schedules(self):
+        join = LOOKUP
+        join['$lookup']["from"] = "AssetOptimizationSchedule"
+        join['$lookup']["localField"] = "_id"
+        join['$lookup']["foreignField"] = "optimization_run_id"
+        join['$lookup']["as"] = "asset_schedules"
+        return join
+    
+    def _filters(self, _id:Optional[ObjectId]=None, valid_from:Optional[datetime]=None, valid_until:Optional[datetime]=None):
+        match = MATCH
+        if _id:
+            match["$match"]["_id"] = _id
+        if valid_from:
+            match["$match"]["valid_from"] = valid_from
+        if valid_until:
+            match["$match"]["valid_until"] = valid_until
+        return match
+            
+
     @classmethod
-    async def exists(clc, _id: ObjectId, links=False) -> Union["OptimizationRun", False]:
-        run = await clc.find_one(
-            {"_id": ObjectId(_id)},
-            fetch_links=links
-        )
-        if run:
-            return run
-        return False
+    async def exists(clc, _id: ObjectId, links: bool = False) -> Union["OptimizationRun", None]:
+ 
+        pipeline = [clc._filters(*[clc, _id])]
+        if links:
+            pipeline.append(
+                clc._join_asset_schedules(clc)
+                )
+            
+        logger.debug(f"Executing aggregation pipeline {pipeline}")
+
+        return await clc.aggregate(pipeline).to_list()
+
+    @classmethod
+    async def find_valid_from_and_id(clc, valid_from: datetime, _id: Optional[ObjectId]=None):
+
+        pipeline = [
+            clc._filters(*[clc, _id, valid_from]),
+            clc._join_asset_schedules(clc)
+                    ]
+
+        return await clc.aggregate(pipeline).to_list()
 
 
 class Schedule(BaseModel):

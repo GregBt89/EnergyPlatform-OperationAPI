@@ -119,7 +119,7 @@ class PODMeasurementsIn(BaseModel):
         return result
 
 
-class MeasurementsOut(BaseModel):
+class PODMeasurementsOut(BaseModel):
     pod_id: str = Field(...,
                         description="The unique mongodb identifier for the asset")
     timestamps: List[datetime] = Field(...,

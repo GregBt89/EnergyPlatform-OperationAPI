@@ -1,6 +1,7 @@
 from fastapi import APIRouter, status, Depends
 from typing import List, Optional
 from loguru import logger
+from datetime import datetime
 from app.services import (
     OptimizationServices as PS,
     get_optimization_services as gos
@@ -36,13 +37,15 @@ async def store_asset_optimization_results(
     return await services.store_asset_optimization_results(run_id, results)
 
 
-@router.get("/{run_id:str}", response_model=OptimizationRuResultsResponse, response_model_exclude_none=True)
-async def get_optimization_runs(
-    run_id: str,
+@router.get("", response_model=List[OptimizationRuResultsResponse], response_model_exclude_none=True)
+async def get_optimization_run(
+    run_id: Optional[str]=None,
+    valid_from:Optional[datetime]=None,
     schedules: Optional[bool] = False,
     services: PS = Depends(gos)
 ):
-    return await services.get_optimization_run(run_id, schedules)
+    return await services.get_optimization_run_results(
+        run_id=run_id, valid_from=valid_from, schedules=schedules)
 
 
 @router.get("/assets/{asset_id:str}", response_model=Optional[List[AssetOptimizationResultsResponse]], response_model_exclude_none=True)

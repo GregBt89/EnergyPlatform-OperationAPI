@@ -78,7 +78,7 @@ class MeasurementServices(CommonServices):
                                 start_date: Optional[datetime] = None,
                                 end_date: Optional[datetime] = None,
                                 **session_kwargs):
-
+        print(asset_mongo_id)
         query = {'asset_type': asset_type}
         if asset_mongo_id:
             try:

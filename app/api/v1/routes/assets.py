@@ -4,7 +4,7 @@ from app.services import MeasurementServices as MS, get_measurement_services as 
 from typing import List, Optional, Union
 from app.utils.types import DATEOPTIONS
 from loguru import logger
-
+    
 router = APIRouter(tags=["Assets"], prefix="/assets")
 
 
@@ -14,6 +14,8 @@ async def get_bess_measurements(asset_id: Union[str, int] = None,
                                 start_date: Optional[DATEOPTIONS] = None,
                                 end_date: Optional[DATEOPTIONS] = None,
                                 services: MS = Depends(gms)):
+    print(asset_id)
+    print("mg:", asset_mongo_id)
     return await services.get_bess_measurements(
         asset_id, asset_mongo_id=asset_mongo_id, start_date=start_date, end_date=end_date
     )

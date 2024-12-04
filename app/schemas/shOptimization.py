@@ -51,4 +51,4 @@ class OptimizationRuResultsResponse(OptimizationRun):
     asset_schedules: Optional[List["AssetOptimizationResults"]] = Field(
         None, description="A list of schedules corresponsing to asset optimization results")
     id: PydanticObjectId = Field(
-        ..., serialization_alias="run_id", description="The run id grouping the asset_schedules under the same optimization task.")
+        ..., serialization_alias="run_id", alias="_id", description="The run id grouping the asset_schedules under the same optimization task.")

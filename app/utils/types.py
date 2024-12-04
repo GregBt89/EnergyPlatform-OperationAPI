@@ -16,6 +16,8 @@ from bson import ObjectId
 from datetime import datetime, date
 from loguru import logger
 
+from fastapi import Query
+
 T = TypeVar("T")  # Generic type for the document type linked to
 
 
@@ -84,7 +86,7 @@ PydanticObjectId = Annotated[
 ID = Union[int, PydanticObjectId]
 
 POD_ID = ID
-ASSET_ID = ID
+ASSET_ID = Annotated[ID, Query(description="An integer or a valid MongoDB ObjectId")]
 
 DATEOPTIONS = Union[datetime, date, None]
 DATERANGE = Tuple[DATEOPTIONS, DATEOPTIONS]

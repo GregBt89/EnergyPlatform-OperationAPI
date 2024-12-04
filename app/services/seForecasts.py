@@ -52,31 +52,32 @@ class ForecastServices(CommonServices):
         # Insert documents in a transaction
         await self.create_transaction(f.MarketForecast.insert_many, docs)
 
-    async def get_asset_forecasts(self, asset_id):
+    async def get_asset_forecasts(self, query):
         #!TODO Add conditional search
-        if asset_id:
-            if isinstance(asset_id, int):
-                #Search by sql_id
-                forecasts = await f.PodForecast()
-            elif ObjectId.is_valid():
+        print(query.model_dump(exclude_none=True))
+        if query.asset_id:
+            if isinstance(query.asset_id, int):
+                # Search by sql_id
+                forecasts = await f.AssetForecast.find(query.model_dump(exclude_none=True)).to_list()
+            elif ObjectId.is_valid(query.asset_id):
                 # Search by mongo_id
-                forecasts = await f.PodForecast()
+                forecasts = await f.AssetForecast.find(query.model_dump(exclude_none=True)).to_list()
         else:
             # Return all forecasts
-            forecasts = await f.AssetForecast.all()  
+            forecasts = await f.AssetForecast.all()
         return forecasts
-    
+
     async def get_pod_forecasts(self, pod_id):
         #!TODO Add conditional search
         if pod_id:
             if isinstance(pod_id, int):
-                #Search by sql_id
+                # Search by sql_id
                 forecasts = await f.PodForecast()
             elif ObjectId.is_valid():
                 # Search by mongo_id
                 forecasts = await f.PodForecast()
         else:
             # Return all forecasts
-            forecasts = await f.AssetForecast.all()     
-        
+            forecasts = await f.AssetForecast.all()
+
         return forecasts

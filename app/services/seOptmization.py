@@ -11,8 +11,8 @@ from app.schemas.shOptimization import (
 from loguru import logger
 from app.utils.types import PydanticObjectId
 from typing import List, Optional
+from datetime import datetime
 from bson import ObjectId
-
 
 class OptimizationServices(CommonServices):
 
@@ -44,7 +44,6 @@ class OptimizationServices(CommonServices):
             if not await mC.AssetsCatalog.exists(doc.asset_id):
                 raise ValueError(
                     f"Asset id {doc.asset_id} results for optimization run with id {run_id} doesnt exitst")
-            print(doc.model_dump())
             docs.append(
                 self._initialize_document(
                     mO.AssetOptimizationSchedule,
@@ -58,21 +57,32 @@ class OptimizationServices(CommonServices):
         )
 
         return
+    
+    async def get_optimization_results_by_run_id(self, run_id: ObjectId):
+        run = await mO.OptimizationRun.exists(self._to_ObjectId(run_id))
 
-    async def get_optimization_run(self, run_id: str, schedules: Optional[bool] = False):
+    async def get_optimization_run_results(self, run_id: Optional[ObjectId]=None,
+                    schedules: Optional[bool] = False, valid_from:Optional[datetime]=None):
+        
+        if run_id and valid_from:
+            run = await mO.OptimizationRun.find_valid_from_and_id(valid_from, run_id)
+        elif run_id:
+            run = await mO.OptimizationRun.exists(ObjectId(run_id), links=schedules)
+        elif valid_from:
+            run = await mO.OptimizationRun.find_valid_from_and_id(valid_from)
+        else:
+            run = None
 
-        run_id = self._to_ObjectId(run_id)
-
-        run = await mO.OptimizationRun.exists(run_id, links=False)
         if not run:
             raise ValueError(
-                f"Optimization run with id {run_id} doesnt exitst")
+                f"Optimization run with id {run_id} doesnt exitst"
+                )
 
-        if schedules:
-            logger.debug("Some mongodb servers (AWS DocDB) do not support correlated subqueries." +
-                         "Using second direct query for optimization results")
-            run.asset_schedules = await mO.AssetOptimizationSchedule.by_optimization_run_id(run_id)
         return run
+
+    async def get_optimization_run(self, run_id: ObjectId, schedules:bool=False):
+        return await self.get_optimization_run_results(run_id, schedules)
+
 
     async def get_asset_optimization_results(self, asset_id: PydanticObjectId, run_id: Optional[PydanticObjectId]):
 
