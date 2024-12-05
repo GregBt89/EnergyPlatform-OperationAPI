@@ -1,28 +1,23 @@
-from fastapi import APIRouter, status, Depends
-from app.schemas.shMeasurements import BessMeasurementsIn, AssetMeasurementsIn, MeasurementsOut
+from fastapi import APIRouter, status, Depends, Query
+from app.validation.schemas.shMeasurements import BessMeasurementsIn, AssetMeasurementsIn, MeasurementsOut
+from app.validation.queries.vqMeasurements import AssetMeaserementsQuery
 from app.services import MeasurementServices as MS, get_measurement_services as gms
-from typing import List, Optional, Union
+from typing import List, Optional, Annotated
 from app.utils.types import DATEOPTIONS
 from loguru import logger
+
     
 router = APIRouter(tags=["Assets"], prefix="/assets")
 
 
 @router.get("/measurements/bess", response_model=MeasurementsOut, response_model_exclude_none=True)
-async def get_bess_measurements(asset_id: Union[str, int] = None,
-                                asset_mongo_id: Optional[str] = None,
-                                start_date: Optional[DATEOPTIONS] = None,
-                                end_date: Optional[DATEOPTIONS] = None,
+async def get_bess_measurements(query_params: AssetMeaserementsQuery = Depends(),
                                 services: MS = Depends(gms)):
-    print(asset_id)
-    print("mg:", asset_mongo_id)
-    return await services.get_bess_measurements(
-        asset_id, asset_mongo_id=asset_mongo_id, start_date=start_date, end_date=end_date
-    )
+    return await services.get_bess_measurements(query_params)
 
 
 @router.get("/measurements/pvpp", response_model=MeasurementsOut, response_model_exclude_none=True)
-async def get_pvpp_measurements(asset_id: Optional[str] = None,
+async def get_pvpp_measurements(asset_id: Optional[int] = None,
                                 asset_mongo_id: Optional[str] = None,
                                 start_date: Optional[DATEOPTIONS] = None,
                                 end_date: Optional[DATEOPTIONS] = None,
@@ -33,7 +28,7 @@ async def get_pvpp_measurements(asset_id: Optional[str] = None,
 
 
 @router.get("/measurements/wpp", response_model=MeasurementsOut, response_model_exclude_none=True)
-async def get_wpp_measurements(asset_id: Optional[str] = None,
+async def get_wpp_measurements(asset_id: Optional[int] = None,
                                asset_mongo_id: Optional[str] = None,
                                start_date: Optional[DATEOPTIONS] = None,
                                end_date: Optional[DATEOPTIONS] = None,
@@ -47,7 +42,7 @@ async def get_wpp_measurements(asset_id: Optional[str] = None,
 
 
 @router.get("/measurements/hydro", response_model=MeasurementsOut, response_model_exclude_none=True)
-async def get_hpp_measurements(asset_id: Optional[str] = None,
+async def get_hpp_measurements(asset_id: Optional[int] = None,
                                asset_mongo_id: Optional[str] = None,
                                start_date: Optional[DATEOPTIONS] = None,
                                end_date: Optional[DATEOPTIONS] = None,

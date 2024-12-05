@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from typing import List
 
-from app.schemas.shCatalogs import *
+from app.validation.schemas.shCatalogs import *
 from app.services import (
     CatalogServices,
     get_catalog_services as gcs

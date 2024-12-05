@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from ..db.enums import AssetType, MeterType, PODType, ECType
+from app.db.enums import AssetType, MeterType, PODType, ECType
 from typing import Optional, List
 import datetime
 from bson import ObjectId

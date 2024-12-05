@@ -9,7 +9,7 @@ from app.db.models.mOptimization import (
     OptimizationMetadata,
     AssetSchedule
 )
-from app.schemas import FromAttributes
+from app.validation.schemas import FromAttributes
 
 
 class OptimizationRun(FromAttributes):

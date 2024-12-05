@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Depends
-from app.schemas.shMeasurements import PODMeasurementsIn
+from app.validation.schemas.shMeasurements import PODMeasurementsIn
 from app.services import PODsServices as PS, get_pod_services as gps
 from typing import List
 

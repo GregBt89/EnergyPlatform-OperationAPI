@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, HTTPException
-from ..internal.schemas import Meter, POD, EC
+from app.validation.schemas import Meter, POD, EC
 
 from typing import List
 

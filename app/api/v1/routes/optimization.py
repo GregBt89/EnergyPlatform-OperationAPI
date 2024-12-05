@@ -1,17 +1,20 @@
-from fastapi import APIRouter, status, Depends
-from typing import List, Optional
+from fastapi import APIRouter, status, Depends, Query
+from typing import List, Optional, Annotated
 from loguru import logger
 from datetime import datetime
 from app.services import (
     OptimizationServices as PS,
     get_optimization_services as gos
 )
-from app.schemas.shOptimization import (
+from app.validation.schemas.shOptimization import (
     OptimizationRun,
     OptimizationRunResponse,
     AssetOptimizationResults,
     AssetOptimizationResultsResponse,
     OptimizationRuResultsResponse
+)
+from app.validation.queries.vqOptimization import(
+    AssetOptimizationQuery
 )
 from app.utils.types import PydanticObjectId
 
@@ -38,14 +41,10 @@ async def store_asset_optimization_results(
 
 
 @router.get("", response_model=List[OptimizationRuResultsResponse], response_model_exclude_none=True)
-async def get_optimization_run(
-    run_id: Optional[str]=None,
-    valid_from:Optional[datetime]=None,
-    schedules: Optional[bool] = False,
+async def get_optimization_run(query: AssetOptimizationQuery = Depends(), 
     services: PS = Depends(gos)
 ):
-    return await services.get_optimization_run_results(
-        run_id=run_id, valid_from=valid_from, schedules=schedules)
+    return await services.get_optimization_run_results(query)
 
 
 @router.get("/assets/{asset_id:str}", response_model=Optional[List[AssetOptimizationResultsResponse]], response_model_exclude_none=True)

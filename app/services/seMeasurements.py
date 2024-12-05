@@ -7,16 +7,18 @@ from ..db.enums import AssetType
 from beanie import Document
 from bson import ObjectId
 from typing import List, Union, Type, TypeVar, Optional
-from ..schemas.shMeasurements import (
+from app.validation.schemas.shMeasurements import (
     BessMeasurementsIn,
     AssetMeasurementsIn
+)
+from app.validation.queries.vqMeasurements import(
+    AssetMeaserementsQuery
 )
 from .seCommon import CommonServices
 from loguru import logger
 from datetime import datetime
 # Generic type for different measurement schemas
 M = TypeVar("M", BessMeasurementsIn, AssetMeasurementsIn)
-
 
 class MeasurementServices(CommonServices):
 
@@ -72,35 +74,23 @@ class MeasurementServices(CommonServices):
 
     async def _get_measurements(self,
                                 model: Document,
-                                asset_id: Union[int, str, ObjectId],
                                 asset_type: AssetType,
-                                asset_mongo_id: Optional[ObjectId] = None,
-                                start_date: Optional[datetime] = None,
-                                end_date: Optional[datetime] = None,
+                                query:AssetMeaserementsQuery,
                                 **session_kwargs):
-        print(asset_mongo_id)
-        query = {'asset_type': asset_type}
-        if asset_mongo_id:
-            try:
-                asset_id = ObjectId(asset_mongo_id)
-            except Exception:
-                raise HTTPException(
-                    status_code=400, detail="Invalid asset_id format")
-            query['_id'] = asset_id
+        
+        query_dict = {'asset_type': asset_type}
+        if query.asset_mongo_id:
+            query_dict['_id'] = query.asset_mongo_id
         else:
-            try:
-                asset_id = int(asset_id)
-                query["asset_id"] = asset_id
-            except Exception:
-                raise ValueError("Error converting asset_id to integer")
+            query_dict["asset_id"] = query.asset_id
+
 
         # Fetch asset from AssetsCatalog
         asset = await m.AssetsCatalog.find_one(query)
         logger.debug(f"Found asset {asset}")
         if not asset:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Asset {asset_type.value} with id {asset_id} not found"
+            raise ValueError(
+                f"Asset {asset_type.value} with id {query.asset_id if query.asset_id else query.asset_mongo_id} not found"
             )
         # Ensure the model has the `by_asset_id` method
         if not hasattr(model, 'by_asset_id'):
@@ -109,13 +99,13 @@ class MeasurementServices(CommonServices):
             )
 
         # Fetch measurements
-        measurements = await self.create_transaction(model.by_asset_id, asset.id, start_date, end_date, **session_kwargs)
+        measurements = await self.create_transaction(model.by_asset_id, asset.id, query.start_date, query.end_date, **session_kwargs)
         measurements[0]["asset_id"] = str(measurements[0]["asset_id"].id)
         return measurements[0]
 
-    async def get_bess_measurements(self, asset_id: Union[int, str], asset_mongo_id: Optional[ObjectId] = None, **kwargs):
+    async def get_bess_measurements(self, query_params: AssetMeaserementsQuery):
         # Call create_transaction with the correct model and parameters
-        return await self._get_measurements(m.BessMeasurements, asset_id, AssetType.BESS, asset_mongo_id, **kwargs)
+        return await self._get_measurements(m.BessMeasurements, AssetType.BESS, query_params)
 
     async def get_pvpp_measurements(self, asset_id: Union[int, str], asset_mongo_id: Optional[ObjectId] = None, **kwargs):
         # Call create_transaction with the correct model and parameters

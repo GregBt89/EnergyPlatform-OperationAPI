@@ -8,6 +8,7 @@ from app.db.models.mCatalogs import (
     AssetsCatalog, PODCatalog)
 from app.utils.types import PydanticObjectId
 from app.db.models.mShared import InputReferences
+from app.validation.queries.vqForecasts import AssetForecastsQuery
 
 class ForecastMetadata(BaseModel):
     added_at: datetime = Field(...,
@@ -99,8 +100,24 @@ class AssetForecast(BaseForecast):
                 f"Referenced asset_id {self.asset_id} does not exist in AssetsCatalog.")
 
     @classmethod
-    async def all(cls) -> Optional["AssetsCatalog"]:
+    async def all(cls) -> Optional["AssetForecast"]:
         return await cls.find_all().to_list()
+    
+    @classmethod
+    async def find_by_sql_id(
+        cls,
+        query: dict
+        ) ->Optional["AssetForecast"]:
+        return await cls.find(query).to_list()
+    
+    @classmethod
+    async def find_by_mongo_id(
+        cls,
+        query: dict
+        ) ->Optional["AssetForecast"]:
+        print(query)
+        return await cls.find(query).to_list()
+    
 
 
 class PodForecast(BaseForecast):

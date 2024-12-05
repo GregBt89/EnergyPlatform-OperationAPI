@@ -3,10 +3,13 @@ from app.db.models import (
     mCatalogs as mC
 )
 from app.services.seCommon import CommonServices
-from app.schemas.shOptimization import (
+from app.validation.schemas.shOptimization import (
     OptimizationRun,
     OptimizationRunResponse,
     AssetOptimizationResults
+)
+from app.validation.queries.vqOptimization import (
+    AssetOptimizationQuery
 )
 from loguru import logger
 from app.utils.types import PydanticObjectId
@@ -61,24 +64,19 @@ class OptimizationServices(CommonServices):
     async def get_optimization_results_by_run_id(self, run_id: ObjectId):
         run = await mO.OptimizationRun.exists(self._to_ObjectId(run_id))
 
-    async def get_optimization_run_results(self, run_id: Optional[ObjectId]=None,
-                    schedules: Optional[bool] = False, valid_from:Optional[datetime]=None):
+    async def get_optimization_run_results(self, query: AssetOptimizationQuery):
         
-        if run_id and valid_from:
-            run = await mO.OptimizationRun.find_valid_from_and_id(valid_from, run_id)
-        elif run_id:
-            run = await mO.OptimizationRun.exists(ObjectId(run_id), links=schedules)
-        elif valid_from:
-            run = await mO.OptimizationRun.find_valid_from_and_id(valid_from)
-        else:
-            run = None
-
-        if not run:
-            raise ValueError(
-                f"Optimization run with id {run_id} doesnt exitst"
-                )
-
-        return run
+        query_dict = {}
+        if query.run_id:
+            query_dict["run_id"] = query.run_id
+            if query.valid_from:
+                query_dict["valid_from"] = query.valid_from
+                return await mO.OptimizationRun.find_valid_from_and_id(**query_dict)
+            query_dict["links"] = query.schedules
+            return await mO.OptimizationRun.exists(**query_dict)
+        if query.valid_from:
+            query_dict["valid_from"] = query.valid_from
+            return await mO.OptimizationRun.find_valid_from_and_id(**query_dict)
 
     async def get_optimization_run(self, run_id: ObjectId, schedules:bool=False):
         return await self.get_optimization_run_results(run_id, schedules)

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from app.utils.types import PydanticObjectId
 from app.db.models.mShared import InputReferences
 from enum import Enum
-from app.schemas import FromAttributes
+from app.validation.schemas import FromAttributes
 from app.utils.log_setup import logger
 
 

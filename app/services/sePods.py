@@ -7,7 +7,7 @@ from ..db.enums import PODType
 from beanie import Document
 from bson import ObjectId
 from typing import List, Union, Type, TypeVar, Optional
-from ..schemas.shMeasurements import (
+from app.validation.schemas.shMeasurements import (
     PODMeasurementsIn
 )
 from .seCommon import CommonServices

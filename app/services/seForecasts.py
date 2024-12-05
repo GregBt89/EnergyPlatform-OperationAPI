@@ -7,8 +7,11 @@ from ..db.enums import AssetType
 from beanie import Document
 from bson import ObjectId
 from typing import List, Union, Type, TypeVar, Optional
-from ..schemas.shForecasts import (
+from app.validation.schemas.shForecasts import (
     Forecasts
+)
+from app.validation.queries.vqForecasts import (
+    AssetForecastsQuery
 )
 from .seCommon import CommonServices
 from loguru import logger
@@ -52,20 +55,28 @@ class ForecastServices(CommonServices):
         # Insert documents in a transaction
         await self.create_transaction(f.MarketForecast.insert_many, docs)
 
-    async def get_asset_forecasts(self, query):
-        #!TODO Add conditional search
-        print(query.model_dump(exclude_none=True))
+    async def get_asset_forecasts(self, query: AssetForecastsQuery) -> Union[None, List[f.AssetForecast]]:
+        if query.forecast_id:
+            return await f.AssetForecast.find_one(
+                {"_id": ObjectId(query.forecast_id)}
+                )
         if query.asset_id:
             if isinstance(query.asset_id, int):
+                asset = await c.AssetsCatalog.find_one({"asset_id":query["asset_id"]})
+                query.asset_id = asset.id if asset else query.asset_id
                 # Search by sql_id
-                forecasts = await f.AssetForecast.find(query.model_dump(exclude_none=True)).to_list()
+                return await f.AssetForecast.find_by_sql_id(
+                    query.model_dump(exclude_none=True)
+                    )
             elif ObjectId.is_valid(query.asset_id):
+                query.asset_id = ObjectId(query.asset_id)
                 # Search by mongo_id
-                forecasts = await f.AssetForecast.find(query.model_dump(exclude_none=True)).to_list()
+                return await f.AssetForecast.find_by_mongo_id(
+                    query.model_dump(exclude_none=True)
+                    )
         else:
             # Return all forecasts
-            forecasts = await f.AssetForecast.all()
-        return forecasts
+            return await f.AssetForecast.all()
 
     async def get_pod_forecasts(self, pod_id):
         #!TODO Add conditional search

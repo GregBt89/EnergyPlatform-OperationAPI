@@ -3,7 +3,7 @@ from ..db.models import mCatalogs as m
 from bson import ObjectId
 from typing import List
 from .seCommon import CommonServices
-from ..schemas.shCatalogs import (
+from app.validation.schemas.shCatalogs import (
     POD,
     MeterAndPODs,
     Meter,
