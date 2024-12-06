@@ -8,7 +8,7 @@ from bson import ObjectId
 from pydantic import BaseModel, Field
 from typing import List, Dict, Literal
 from datetime import timedelta, datetime, date
-from app.schemas.shOptimization import (
+from app.validation.schemas.shOptimization import (
     AssetOptimizationResults,
     OptimizationRun
 )

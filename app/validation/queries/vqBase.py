@@ -1,11 +1,17 @@
-from typing import Union
+from typing import Union, Optional, Set
 from bson import ObjectId
 from dataclasses import asdict, fields
+from urllib.parse import urlencode
 
 class BaseQuery:
 
-    def model_dump(self, exclude_none: bool = False) -> dict:
+    def model_dump(self,
+                   exclude_none: bool = False,
+                   exclude: Optional[Set[str]] = None,
+                   as_query_string: bool = False
+                   ) -> dict:
         """Convert dataclass to dictionary, dynamically applying serialization aliases."""
+        exclude = exclude or set()
         data = asdict(self)
         result = {}
 
@@ -13,6 +19,10 @@ class BaseQuery:
         for field_info in fields(self):
             field_name = field_info.name
             value = data[field_name]
+
+            # Skip fields that are excluded
+            if field_name in exclude:
+                continue
 
             # Get the Query object and its alias (if any)
             query_obj = field_info.default
@@ -24,8 +34,8 @@ class BaseQuery:
             if not (exclude_none and value is None):  # Exclude None if requested
                 result[key] = value
 
-        return result
-
+        # Return as query string if requested
+        return urlencode(result) if as_query_string else result
     def _convert_to_object_id(self, field_name: str) -> ObjectId:
         value: str = getattr(self, field_name)
         if value:

@@ -13,6 +13,8 @@ fastapi==0.104.1
 greenlet==3.0.1
 gunicorn==22.0.0
 h11==0.14.0
+httpcore==1.0.7
+httpx==0.27.2
 idna==3.4
 jmespath==1.0.1
 lazy-model==0.2.0
@@ -34,7 +36,6 @@ s3transfer==0.7.0
 six==1.16.0
 sniffio==1.3.0
 starlette==0.27.0
-structlog==23.2.0
 toml==0.10.2
 typing_extensions==4.8.0
 tzdata==2024.2

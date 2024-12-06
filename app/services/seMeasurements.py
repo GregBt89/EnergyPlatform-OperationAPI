@@ -86,7 +86,7 @@ class MeasurementServices(CommonServices):
 
 
         # Fetch asset from AssetsCatalog
-        asset = await m.AssetsCatalog.find_one(query)
+        asset = await m.AssetsCatalog.find_one(query_dict)
         logger.debug(f"Found asset {asset}")
         if not asset:
             raise ValueError(
@@ -97,9 +97,10 @@ class MeasurementServices(CommonServices):
             raise AttributeError(
                 f"Document {model.__name__} does not have a 'by_asset_id' method."
             )
-
+        query_dict = query.model_dump(exclude={"asset_id", "asset_mongo_id"})
+        
         # Fetch measurements
-        measurements = await self.create_transaction(model.by_asset_id, asset.id, query.start_date, query.end_date, **session_kwargs)
+        measurements = await self.create_transaction(model.by_asset_id, asset.id,**query_dict, **session_kwargs)
         measurements[0]["asset_id"] = str(measurements[0]["asset_id"].id)
         return measurements[0]
 

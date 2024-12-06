@@ -11,7 +11,7 @@ class AssetMeaserementsQuery(BaseQuery):
         None, description="A valid mongoDB ObjectId (Operation db).") 
     valid_from: Optional[datetime] = Query(
         None, description="The start date of the forecasts.", serialization_alias="start_date")
-    valid_until: Optional[str]= Query(
+    valid_until: Optional[datetime]= Query(
         None, description="The end date of the forecasts.", serialization_alias="end_date")
 
     def __post_init__(self):

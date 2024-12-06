@@ -86,7 +86,6 @@ class OptimizationRun(Document):
             [("metadata.status", 1)],
         ]
 
-
     def _join_asset_schedules(self):
         join = LOOKUP
         join['$lookup']["from"] = "AssetOptimizationSchedule"
@@ -94,8 +93,8 @@ class OptimizationRun(Document):
         join['$lookup']["foreignField"] = "optimization_run_id"
         join['$lookup']["as"] = "asset_schedules"
         return join
-    
-    def _filters(self, _id:Optional[ObjectId]=None, valid_from:Optional[datetime]=None, valid_until:Optional[datetime]=None):
+
+    def _filters(self, _id: Optional[ObjectId] = None, valid_from: Optional[datetime] = None, valid_until: Optional[datetime] = None):
         match = MATCH
         if _id:
             match["$match"]["_id"] = _id
@@ -104,29 +103,28 @@ class OptimizationRun(Document):
         if valid_until:
             match["$match"]["valid_until"] = valid_until
         return match
-            
 
     @classmethod
     async def exists(clc, _id: ObjectId, links: bool = False) -> Union["OptimizationRun", None]:
- 
-        pipeline = [clc._filters(*[clc, _id])]
+
+        pipeline = [clc._filters(*[clc, ObjectId(_id)])]
         if links:
             pipeline.append(
                 clc._join_asset_schedules(clc)
-                )
-            
-        logger.debug(f"Executing aggregation pipeline {pipeline}")
+            )
 
-        return await clc.aggregate(pipeline).to_list()
+        logger.debug(f"Executing aggregation pipeline {pipeline}")
+        result = await clc.aggregate(pipeline).to_list()
+        return result
 
     @classmethod
-    async def find_valid_from_and_id(clc, valid_from: datetime, _id: Optional[ObjectId]=None):
-
+    async def find_valid_from_and_id(clc, valid_from: datetime, _id: Optional[ObjectId] = None):
+        
         pipeline = [
             clc._filters(*[clc, _id, valid_from]),
             clc._join_asset_schedules(clc)
-                    ]
-
+        ]
+        print(pipeline)
         return await clc.aggregate(pipeline).to_list()
 
 

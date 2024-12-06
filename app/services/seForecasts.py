@@ -56,13 +56,14 @@ class ForecastServices(CommonServices):
         await self.create_transaction(f.MarketForecast.insert_many, docs)
 
     async def get_asset_forecasts(self, query: AssetForecastsQuery) -> Union[None, List[f.AssetForecast]]:
+        logger.debug(f"Getting asset forecast for query {query.model_dump()}")
         if query.forecast_id:
             return await f.AssetForecast.find_one(
                 {"_id": ObjectId(query.forecast_id)}
                 )
         if query.asset_id:
             if isinstance(query.asset_id, int):
-                asset = await c.AssetsCatalog.find_one({"asset_id":query["asset_id"]})
+                asset = await c.AssetsCatalog.find_one({"asset_id":query.asset_id})
                 query.asset_id = asset.id if asset else query.asset_id
                 # Search by sql_id
                 return await f.AssetForecast.find_by_sql_id(

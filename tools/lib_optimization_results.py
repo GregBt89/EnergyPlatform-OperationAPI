@@ -12,7 +12,7 @@ df["timestamp"] = pd.to_datetime(df["timestamp"], format="%d/%m/%y %H:%M")
 runIds = pd.read_csv(OPTIMIZATION_RUN_IDs, header=0)
 
 start_date = df["timestamp"].loc[0]
-end_date = df["timestamp"].loc[1000]
+end_date = df["timestamp"].iloc[-3*4*24]
 
 print(f"Start Date: {start_date}")
 print(f"  End Date: {end_date}\n")

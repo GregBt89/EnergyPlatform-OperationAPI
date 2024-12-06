@@ -21,8 +21,7 @@ async def add_new_asset_forecasts(asset_id: PydanticObjectId, forecast: Forecast
 
 @router.get("/assets")
 async def get_asset_forecasts(query_params: AssetForecastsQuery = Depends(), services: FS = Depends(gfs)):
-    return query_params
-    #return await services.get_asset_forecasts(query_params)
+    return await services.get_asset_forecasts(query_params)
 
 
 @router.post("/pods/{pod_id}")

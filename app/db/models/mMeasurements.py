@@ -87,6 +87,8 @@ class BessMeasurements(Document):
             # If only end_date is provided, match all records before this date
             query['timestamp'] = {'$lte': end_date}
 
+        print(query)
+        
         s1 = {
             '$match': query
         }

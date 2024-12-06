@@ -34,14 +34,13 @@ class OptimizationServices(CommonServices):
 
     async def store_asset_optimization_results(
             self,
-            run_id: PydanticObjectId,
+            run_id:PydanticObjectId,
             results=List[AssetOptimizationResults]
     ) -> None:
         run = await mO.OptimizationRun.exists(run_id)
         if not run:
             raise ValueError(
                 f"Optimization run with id {run_id} doesnt exitst")
-
         docs = []
         for doc in results:
             if not await mC.AssetsCatalog.exists(doc.asset_id):
@@ -50,7 +49,7 @@ class OptimizationServices(CommonServices):
             docs.append(
                 self._initialize_document(
                     mO.AssetOptimizationSchedule,
-                    {**doc.model_dump(), "optimization_run_id": run.id}
+                    {**doc.model_dump(), "optimization_run_id": run[0]["_id"]}
                 )
             )
 
@@ -68,7 +67,7 @@ class OptimizationServices(CommonServices):
         
         query_dict = {}
         if query.run_id:
-            query_dict["run_id"] = query.run_id
+            query_dict["_id"] = query.run_id
             if query.valid_from:
                 query_dict["valid_from"] = query.valid_from
                 return await mO.OptimizationRun.find_valid_from_and_id(**query_dict)
